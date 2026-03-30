@@ -9,7 +9,7 @@ func validPalindrome(s string) bool {
 	}
 
 	for i := 0; i < len(str); i++ {
-		for j := len(str) - 1; j > 0; j-- {
+		for j := len(str) - 1; j >= 0; j-- {
 			if str[i] == str[j] {
 				return true
 			}
