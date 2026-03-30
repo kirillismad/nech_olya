@@ -1,17 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
-func main() {
-	var s, t string
-	fmt.Scan(&s)
-	fmt.Scan(&t)
-
-	fmt.Println(ValidAnagram(s, t))
-}
-
 func ValidAnagram(s, t string) bool {
 	var count int
 
