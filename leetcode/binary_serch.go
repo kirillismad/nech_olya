@@ -1,20 +1,20 @@
 package main
 
 func BinarySerch(nums []int, target int) int {
-	mid := len(nums)/2 - 1
-	ind := -1
-	if target <= nums[mid] {
-		for i := 0; i < len(nums); i++ {
-			if target == nums[i] {
-				ind = i
-			}
-		}
-	} else if target >= nums[mid] {
-		for i := len(nums) / 2; i < len(nums); i++ {
-			if target == nums[i] {
-				ind = i
-			}
+	left := 0
+	right := len(nums) - 1
+
+	for left <= right {
+		mid := left + (right-left)/2
+
+		if nums[mid] == target {
+			return mid
+		} else if nums[mid] < target {
+			left = mid + 1
+		} else {
+			right = mid - 1
 		}
 	}
-	return ind
+
+	return -1
 }
