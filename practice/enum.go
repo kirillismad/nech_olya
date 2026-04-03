@@ -14,5 +14,3 @@ const (
 	NumberEight
 	NumberNine
 )
-
-func Enum() {}

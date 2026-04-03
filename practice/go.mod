@@ -1,3 +1,3 @@
-module main.go
+module practice
 
 go 1.26.1
