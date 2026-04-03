@@ -1,6 +1,8 @@
-package main
+package leetcode
 
-func UniqueNumber(arr []int) bool {
+// O(n)-по времени
+// O(n)-по памяти
+func uniqueOccurrences(arr []int) bool {
 	freq := make(map[int]int)
 	for _, num := range arr {
 		freq[num]++

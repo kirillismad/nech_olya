@@ -1,6 +1,8 @@
-package main
+package leetcode
 
-func ValidAnagram(s, t string) bool {
+// O(n^2)-по времени
+// O(1)-по памяти
+func isAnagram(s, t string) bool {
 	var count int
 
 	if len(s) > len(t) {

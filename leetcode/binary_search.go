@@ -1,6 +1,8 @@
-package main
+package leetcode
 
-func BinarySearch(nums []int, target int) int {
+// O(log n)-по времени
+// O(1)-по памяти
+func search(nums []int, target int) int {
 	left := 0
 	right := len(nums) - 1
 
