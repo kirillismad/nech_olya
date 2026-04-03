@@ -1,21 +1,24 @@
-package main
+package leetcode
 
 import "unicode"
 
-func validPalindrome(s string) bool {
-	str := cleanStrings(s)
-	if str == "" {
+// O(n)-по времени
+// O(n)-по памяти
+func isPalindrome(s string) bool {
+	s = cleanStrings(s)
+	if s == " " {
 		return true
 	}
+	left, right := 0, len(s)-1
 
-	for i := 0; i < len(str); i++ {
-		for j := len(str) - 1; j >= 0; j-- {
-			if str[i] == str[j] {
-				return true
-			}
+	for left < right {
+		if s[left] != s[right] {
+			return false
 		}
+		left++
+		right--
 	}
-	return false
+	return true
 }
 
 func cleanStrings(s string) string {

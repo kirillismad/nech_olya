@@ -1,13 +1,24 @@
-package main
+package leetcode
 
 import "testing"
 
 func TestBinarySearch(t *testing.T) {
-	nums := []int{1, 2, 3, 4, 5}
-	target := 1
-	got := BinarySearch(nums, target)
-	want := 0
-	if got != want {
-		t.Errorf("got %v, want %v", got, want)
-	}
+	t.Run("tc 1", func(t *testing.T) {
+		nums := []int{-1, 0, 3, 5, 9, 12}
+		target := 9
+		got := search(nums, target)
+		want := 4
+		if got != want {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+	t.Run("tc 2", func(t *testing.T) {
+		nums := []int{-1, 0, 3, 5, 9, 12}
+		target := 2
+		got := search(nums, target)
+		want := -1
+		if got != want {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
 }

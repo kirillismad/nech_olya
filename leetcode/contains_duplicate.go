@@ -1,5 +1,7 @@
-package main
+package leetcode
 
+// O(n)-по времени
+// O(n)-по памяти
 func containsDuplicate(nums []int) bool {
 	repeat := make(map[int]int)
 	for _, v := range nums {
