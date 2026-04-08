@@ -1,15 +1,17 @@
 package leetcode
 
-// O(n^2)-по времени
+// O(n)-по времени
 // O(1)-по памяти
 func twoSum(nums []int, target int) []int {
-	s := make([]int, 0)
+	elemNums := make(map[int]int)
 	for i := 0; i < len(nums); i++ {
-		for j := i + 1; j < len(nums); j++ {
-			if nums[i]+nums[j] == target {
-				s = append(s, i, j)
-			}
+		elem := nums[i]
+		twoElem := target - elem
+		idElem, ok := elemNums[twoElem]
+		if ok {
+			return []int{idElem, i}
 		}
+		elemNums[elem] = i
 	}
-	return s
+	return nil
 }
