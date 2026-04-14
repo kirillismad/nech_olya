@@ -6,10 +6,15 @@ import (
 	"sync"
 )
 
+type Result struct {
+	WorkerID int
+	Value    int
+}
+
 func workerPool() {
 	var wg sync.WaitGroup
 	jobs := make(chan int, 10)
-	result := make(chan int, 10)
+	result := make(chan Result, 10)
 
 	for i := 1; i <= 10; i++ {
 		jobs <- i
@@ -26,17 +31,17 @@ func workerPool() {
 
 	sum := 0
 	for val := range result {
-		fmt.Println(val)
+		fmt.Printf("Воркер: %d, Квадрат числа: %d\n", val.WorkerID, val.Value)
 		sum++
 	}
 	fmt.Println("Общее число обработанных задач: ", sum)
 
 }
 
-func worker(id int, jobs <-chan int, result chan<- int, wg *sync.WaitGroup) {
+func worker(id int, jobs <-chan int, result chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
 		y := math.Pow(float64(job), 2)
-		result <- int(y)
+		result <- Result{WorkerID: id, Value: int(y)}
 	}
 }
