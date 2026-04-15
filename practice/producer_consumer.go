@@ -3,7 +3,7 @@ package practice
 import "fmt"
 
 func producerConsumer() {
-	values := make(chan int, 5)
+	values := make(chan int)
 	result := make(chan int)
 	go producer(values)
 	go consumer(values, result)
