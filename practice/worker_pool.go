@@ -2,7 +2,6 @@ package practice
 
 import (
 	"fmt"
-	"math"
 	"sync"
 )
 
@@ -13,21 +12,25 @@ type Result struct {
 
 func workerPool() {
 	var wg sync.WaitGroup
-	jobs := make(chan int, 10)
-	result := make(chan Result, 10)
+	jobs := make(chan int)
+	result := make(chan Result)
 
-	for i := 1; i <= 10; i++ {
-		jobs <- i
-	}
-	close(jobs)
+	go func() {
+		for i := 1; i <= 10; i++ {
+			jobs <- i
+		}
+		close(jobs)
+	}()
 
 	for i := 1; i <= 3; i++ {
 		wg.Add(1)
 		go worker(i, jobs, result, &wg)
 	}
 
-	wg.Wait()
-	close(result)
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
 
 	sum := 0
 	for val := range result {
@@ -41,7 +44,7 @@ func workerPool() {
 func worker(id int, jobs <-chan int, result chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
-		y := math.Pow(float64(job), 2)
+		y := job * job
 		result <- Result{WorkerID: id, Value: int(y)}
 	}
 }
