@@ -6,7 +6,7 @@ import (
 )
 
 func merge(a, b <-chan string) <-chan string {
-	out := make(chan string, cap(a)+cap(b))
+	out := make(chan string)
 	var wg sync.WaitGroup
 	read := func(ch <-chan string) {
 		defer wg.Done()
@@ -26,8 +26,8 @@ func merge(a, b <-chan string) <-chan string {
 }
 
 func fanIn() {
-	ch1 := make(chan string, 3)
-	ch2 := make(chan string, 3)
+	ch1 := make(chan string)
+	ch2 := make(chan string)
 
 	go func() {
 		for i := 1; i <= 3; i++ {
