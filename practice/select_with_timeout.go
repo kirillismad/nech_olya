@@ -6,8 +6,8 @@ import (
 )
 
 func selectWithTimeout() {
-	fastChan := make(chan string, 1)
-	slowlyChan := make(chan string, 1)
+	fastChan := make(chan string)
+	slowlyChan := make(chan string)
 
 	go func() {
 		time.Sleep(200 * time.Millisecond)
