@@ -7,6 +7,14 @@ import (
 )
 
 func unbufferedChan() {
+	worker := func(jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
+		defer wg.Done()
+		for job := range jobs {
+			result := math.Pow(float64(job), 2)
+			results <- int(result)
+		}
+
+	}
 	var wg sync.WaitGroup
 	jobs := make(chan int)
 	results := make(chan int)
@@ -29,14 +37,4 @@ func unbufferedChan() {
 	for result := range results {
 		fmt.Println(result)
 	}
-
-}
-
-func worker(jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for job := range jobs {
-		result := math.Pow(float64(job), 2)
-		results <- int(result)
-	}
-
 }

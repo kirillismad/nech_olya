@@ -11,6 +11,13 @@ type Result struct {
 }
 
 func workerPool() {
+	worker := func(id int, jobs <-chan int, result chan<- Result, wg *sync.WaitGroup) {
+		defer wg.Done()
+		for job := range jobs {
+			y := job * job
+			result <- Result{WorkerID: id, Value: int(y)}
+		}
+	}
 	var wg sync.WaitGroup
 	jobs := make(chan int)
 	result := make(chan Result)
@@ -39,12 +46,4 @@ func workerPool() {
 	}
 	fmt.Println("Общее число обработанных задач: ", sum)
 
-}
-
-func worker(id int, jobs <-chan int, result chan<- Result, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for job := range jobs {
-		y := job * job
-		result <- Result{WorkerID: id, Value: int(y)}
-	}
 }
