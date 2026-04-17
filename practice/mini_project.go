@@ -26,20 +26,22 @@ func MiniProject() {
 		return
 	}
 
-	jobs := make(chan Task, len(os.Args)-2)
-	results := make(chan Result, len(os.Args)-2)
+	jobs := make(chan Task)
+	results := make(chan Result)
 	numWorker, _ := strconv.Atoi(os.Args[1]) //кол-во воркеров
-
-	for i := 2; i < len(os.Args); i++ {
-		duration, _ := strconv.Atoi(os.Args[i])
-		jobs <- Task{Id: i - 1, T: time.Duration(duration) * time.Millisecond} //генератор задач
-	}
-	close(jobs)
 
 	for i := 0; i < numWorker; i++ {
 		wg.Add(1)
 		go worker(jobs, results, &wg)
 	}
+
+	go func() {
+		for i := 2; i < len(os.Args); i++ {
+			duration, _ := strconv.Atoi(os.Args[i])
+			jobs <- Task{Id: i - 1, T: time.Duration(duration) * time.Millisecond} //генератор задач
+		}
+		close(jobs)
+	}()
 
 	go func() {
 		wg.Wait()
@@ -76,17 +78,12 @@ func worker(jobs <-chan Task, results chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for task := range jobs {
-		done := make(chan bool)
-		go func(t Task) {
-			time.Sleep(t.T)
-			done <- true
-		}(task)
-
 		select {
-		case <-done:
+		case <-time.After(task.T):
 			results <- Result{TaskID: task.Id, Success: true, Duration: task.T}
 		case <-time.After(800 * time.Millisecond):
 			results <- Result{TaskID: task.Id, Success: false, Duration: task.T}
 		}
+
 	}
 }
