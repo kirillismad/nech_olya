@@ -32,7 +32,19 @@ func MiniProject() {
 
 	for i := 0; i < numWorker; i++ {
 		wg.Add(1)
-		go worker(jobs, results, &wg)
+		go func() {
+			defer wg.Done()
+
+			for task := range jobs {
+				select {
+				case <-time.After(task.T):
+					results <- Result{TaskID: task.Id, Success: true, Duration: task.T}
+				case <-time.After(800 * time.Millisecond):
+					results <- Result{TaskID: task.Id, Success: false, Duration: task.T}
+				}
+
+			}
+		}()
 	}
 
 	go func() {
@@ -72,18 +84,4 @@ func MiniProject() {
 	fmt.Printf("ID успешных задач: %v\n", successfulID)
 	fmt.Printf("ID задач с timeout: %v\n", timeoutID)
 
-}
-
-func worker(jobs <-chan Task, results chan<- Result, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for task := range jobs {
-		select {
-		case <-time.After(task.T):
-			results <- Result{TaskID: task.Id, Success: true, Duration: task.T}
-		case <-time.After(800 * time.Millisecond):
-			results <- Result{TaskID: task.Id, Success: false, Duration: task.T}
-		}
-
-	}
 }
