@@ -29,6 +29,7 @@ func errgroupPractice() {
 
 	if err := g.Wait(); err != nil {
 		fmt.Println(err)
+		return
 	}
 	fmt.Println("done 5 task")
 	elapsed := time.Since(start)
