@@ -13,7 +13,7 @@ type Task struct {
 	T  time.Duration
 }
 
-type Result struct {
+type Result2 struct {
 	TaskID   int
 	Success  bool
 	Duration time.Duration
@@ -27,7 +27,7 @@ func MiniProject() {
 	}
 
 	jobs := make(chan Task)
-	results := make(chan Result)
+	results := make(chan Result2)
 	numWorker, _ := strconv.Atoi(os.Args[1]) //кол-во воркеров
 
 	for i := 0; i < numWorker; i++ {
@@ -38,9 +38,9 @@ func MiniProject() {
 			for task := range jobs {
 				select {
 				case <-time.After(task.T):
-					results <- Result{TaskID: task.Id, Success: true, Duration: task.T}
+					results <- Result2{TaskID: task.Id, Success: true, Duration: task.T}
 				case <-time.After(800 * time.Millisecond):
-					results <- Result{TaskID: task.Id, Success: false, Duration: task.T}
+					results <- Result2{TaskID: task.Id, Success: false, Duration: task.T}
 				}
 
 			}
