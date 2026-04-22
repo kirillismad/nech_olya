@@ -3,23 +3,25 @@ package practice
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 )
 
 func contextCreationCancellation() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	var wg sync.WaitGroup
+	func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		// defer cancel() тоже самое, только с принтами, для наглядности
+		defer func() {
+			fmt.Println("defer start")
+			cancel()
+			fmt.Println("defer end")
+		}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		time.Sleep(2 * time.Second)
-		<-ctx.Done()
-		fmt.Println(ctx.Err())
-
+		go func() {
+			fmt.Println("goroutine start")
+			<-ctx.Done()
+			fmt.Printf("goroutine end (%v)\n", ctx.Err())
+		}()
+		time.Sleep(100 * time.Millisecond)
 	}()
-	wg.Wait()
-
+	time.Sleep(500 * time.Millisecond)
 }
