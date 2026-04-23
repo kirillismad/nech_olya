@@ -9,7 +9,7 @@ type key int
 
 const (
 	requestIDKey key = 0
-	falseIDKey       = 1
+	falseIDKey   key = 1
 )
 
 func contextWithValue() {
