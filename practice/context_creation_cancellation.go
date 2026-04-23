@@ -3,23 +3,21 @@ package practice
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 )
 
 func contextCreationCancellation() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	var wg sync.WaitGroup
+	func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		go func() {
+			<-ctx.Done()
+			fmt.Println(ctx.Err())
+
+		}()
 		time.Sleep(2 * time.Second)
-		<-ctx.Done()
-		fmt.Println(ctx.Err())
-
 	}()
-	wg.Wait()
+	time.Sleep(5 * time.Second)
 
 }
