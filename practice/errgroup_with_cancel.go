@@ -24,14 +24,16 @@ func ErrGroupWithCancel() {
 	for i := 2; i < 5; i++ {
 		g.Go(func() error {
 			log.Printf("%d горутина начала работу\n", i)
-			select {
-			case <-ctx.Done():
-				log.Printf("Горутина %d остановлена, время остановки: %v\n", i, time.Now())
-				if err := ctx.Err(); err != nil {
-					return err
-				}
-			case <-time.After(100 * time.Millisecond):
+			for {
+				select {
+				case <-ctx.Done():
+					log.Printf("Горутина %d остановлена, время остановки: %v\n", i, time.Now())
+					if err := ctx.Err(); err != nil {
+						return err
+					}
+				case <-time.After(100 * time.Millisecond):
 
+				}
 			}
 			return nil
 		})
