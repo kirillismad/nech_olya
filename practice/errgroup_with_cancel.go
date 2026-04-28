@@ -21,13 +21,13 @@ func ErrGroupWithCancel() {
 		time.Sleep(500 * time.Millisecond)
 		return fmt.Errorf("горутина 1 вернула ошибку")
 	})
-	for i := 2; i < 5; i++ {
+	for range 3 {
 		g.Go(func() error {
-			log.Printf("%d горутина начала работу\n", i)
+			log.Println("Горутина начала работу")
 			for {
 				select {
 				case <-ctx.Done():
-					log.Printf("Горутина %d остановлена, время остановки: %v\n", i, time.Now())
+					log.Printf("Горутина остановлена, время остановки: %v\n", time.Now())
 					if err := ctx.Err(); err != nil {
 						return err
 					}
