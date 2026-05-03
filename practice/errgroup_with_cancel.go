@@ -35,7 +35,6 @@ func ErrGroupWithCancel() {
 
 				}
 			}
-			return nil
 		})
 	}
 	err := g.Wait()
