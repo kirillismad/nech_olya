@@ -11,20 +11,20 @@ func TestSentinelErr(t *testing.T) {
 		_, err := FindUser(id)
 		if err == nil {
 			t.Errorf("error expected: %v", ErrNotFound)
+			return
 		}
-		if errors.Is(err, ErrNotFound) {
-			t.Log(err)
+		if !errors.Is(err, ErrNotFound) {
+			t.Errorf("expected error: %v, got: %v", ErrNotFound, err)
+			return
 		}
-
+		t.Logf("its fine")
 	})
 	t.Run("tc 2:", func(t *testing.T) {
 		id := 1
 		_, err := FindUser(id)
-		if err == nil {
-			t.Log("no error")
-		}
-		if errors.Is(err, ErrNotFound) {
-			t.Error(err)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+			return
 		}
 	})
 }
