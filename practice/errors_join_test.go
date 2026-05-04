@@ -16,14 +16,10 @@ func TestErrorJoin(t *testing.T) {
 			return
 		}
 		if err != nil {
-			if errors.Is(err, ErrName) {
-				t.Logf("ErrName == %v", err)
-			}
-			if errors.Is(err, ErrQty) {
-				t.Logf("ErrQty ==%v", err)
-			}
-			if errors.Is(err, ErrPrice) {
-				t.Logf("ErrPrice ==%v", err)
+			if errors.Is(err, ErrName) && errors.Is(err, ErrQty) && errors.Is(err, ErrPrice) {
+				t.Logf("err== %v, ", err)
+			} else {
+				t.Errorf("unknown error:%v ", err)
 			}
 		}
 	})
@@ -39,12 +35,8 @@ func TestErrorJoin(t *testing.T) {
 		if err != nil {
 			if errors.Is(err, ErrName) {
 				t.Logf("ErrName== %s", err)
-			}
-			if errors.Is(err, ErrQty) {
-				t.Logf("ErrQty==%s", err)
-			}
-			if errors.Is(err, ErrPrice) {
-				t.Logf("ErrPrice==%s", err)
+			} else {
+				t.Errorf("unknown error: %v", err)
 			}
 		}
 	})
@@ -59,15 +51,8 @@ func TestErrorJoin(t *testing.T) {
 			return
 		}
 		if err != nil {
-			if errors.Is(err, ErrName) {
-				t.Logf("ErrName== %s", err)
-			}
-			if errors.Is(err, ErrQty) {
-				t.Logf("ErrQty==%s", err)
-			}
-			if errors.Is(err, ErrPrice) {
-				t.Logf("ErrPrice==%s", err)
-			}
+			t.Errorf("this result is not expected, error, %v", err)
 		}
+		t.Log("no errors")
 	})
 }
