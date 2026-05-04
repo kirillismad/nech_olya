@@ -3,7 +3,6 @@ package practice
 import (
 	"errors"
 	"fmt"
-	"log"
 )
 
 var (
@@ -31,29 +30,4 @@ func InvalidInput(id int) (string, error) {
 		return "", fmt.Errorf("InvalidInput: %w", ErrInvalidInput)
 	}
 	return "correct input", nil
-}
-
-func HandleUserRequest(id int) {
-	data, err := FindUser(id)
-	if err == nil {
-		log.Println(data)
-	}
-	if errors.Is(err, ErrNotFound) {
-		log.Println(err)
-	}
-	data, err = PermissionDenied(id)
-	if err == nil {
-		log.Println(data)
-	}
-	if errors.Is(err, ErrPermissionDenied) {
-		log.Println(err)
-	}
-
-	data, err = InvalidInput(id)
-	if err == nil {
-		log.Println(data)
-	}
-	if errors.Is(err, ErrInvalidInput) {
-		log.Println(err)
-	}
 }
