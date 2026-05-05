@@ -17,7 +17,6 @@ func TestSentinelErr(t *testing.T) {
 			t.Errorf("expected error: %v, got: %v", ErrNotFound, err)
 			return
 		}
-		t.Logf("its fine")
 	})
 	t.Run("tc 2:", func(t *testing.T) {
 		id := 1

@@ -14,5 +14,5 @@ func FindUser(id int) (string, error) {
 	if id <= 0 {
 		return "", fmt.Errorf("FindUser: %w", ErrNotFound)
 	}
-	return "ok find user", ErrInvalidInput
+	return "ok find user", nil
 }
