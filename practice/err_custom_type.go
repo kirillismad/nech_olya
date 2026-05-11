@@ -38,7 +38,7 @@ func ValidateUser(name string, age int) error {
 }
 
 func FindUserByID(id int) error {
-	if id != 123 {
+	if id != 0 {
 		return &NotFoundError{ID: id}
 	}
 	return nil
