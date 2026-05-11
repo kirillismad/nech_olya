@@ -1,0 +1,3 @@
+Hello, файл!
+Good morning!
+Good night!
