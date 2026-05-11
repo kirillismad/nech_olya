@@ -6,14 +6,15 @@ import (
 )
 
 func TestChainOfWrappers(t *testing.T) {
-	var dbError *DBError
 	t.Run("tc 1:", func(t *testing.T) {
 		err := serviceLayer("")
 		if err != nil {
-			if errors.As(err, &dbError) {
-				t.Log(dbError.Query)
+			var dbErr *DBError
+			if errors.As(err, &dbErr) {
+				t.Log(dbErr.Query)
 			} else {
 				t.Error("type error expected dbError")
+				return
 			}
 		}
 	})
@@ -21,8 +22,10 @@ func TestChainOfWrappers(t *testing.T) {
 	t.Run("tc 2:", func(t *testing.T) {
 		err := serviceLayer("4")
 		if err != nil {
-			if errors.As(err, &dbError) {
+			var dbErr *DBError
+			if errors.As(err, &dbErr) {
 				t.Error("type dbError not expected")
+				return
 			}
 		}
 		t.Log("everything is fine")
@@ -32,6 +35,7 @@ func TestChainOfWrappers(t *testing.T) {
 		err := serviceLayer("")
 		if !errors.Is(err, ErrNotFound2) {
 			t.Error("error expected ErrNotFound")
+			return
 		} else {
 			t.Log("everything is fine")
 		}
