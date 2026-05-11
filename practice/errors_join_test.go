@@ -11,16 +11,17 @@ func TestErrorJoin(t *testing.T) {
 		var qty int
 		price := -1.1
 		err := ValidateOrder(name, qty, price)
-		if err == nil {
-			t.Log("ошибок нет")
-			return
-		}
 		if err != nil {
 			if errors.Is(err, ErrName) && errors.Is(err, ErrQty) && errors.Is(err, ErrPrice) {
 				t.Logf("err== %v, ", err)
 			} else {
 				t.Errorf("unknown error:%v ", err)
+				return
 			}
+		}
+		if err == nil {
+			t.Error("ошибок нет")
+			return
 		}
 	})
 	t.Run("tc 2", func(t *testing.T) {
@@ -28,16 +29,17 @@ func TestErrorJoin(t *testing.T) {
 		qty := 5
 		price := 100.2
 		err := ValidateOrder(name, qty, price)
-		if err == nil {
-			t.Log("ошибок нет")
-			return
-		}
 		if err != nil {
 			if errors.Is(err, ErrName) {
 				t.Logf("ErrName== %s", err)
 			} else {
 				t.Errorf("unknown error: %v", err)
+				return
 			}
+		}
+		if err == nil {
+			t.Error("ошибок нет")
+			return
 		}
 	})
 
@@ -46,13 +48,13 @@ func TestErrorJoin(t *testing.T) {
 		qty := 5
 		price := 100.2
 		err := ValidateOrder(name, qty, price)
-		if err == nil {
-			t.Log("ошибок нет")
-			return
-		}
 		if err != nil {
 			t.Errorf("this result is not expected, error, %v", err)
+			return
 		}
-		t.Log("no errors")
+		if err == nil {
+			t.Log("no errors")
+			return
+		}
 	})
 }
