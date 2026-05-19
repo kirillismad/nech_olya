@@ -1,0 +1,30 @@
+POST /product/1234 HTTP/1.1
+Host: httpbin.org
+User-Agent: Mozilla/5.0
+Accept: application/json
+Content-Type: multipart/form-data 
+Connection: keep-alive
+Content-Length: 0
+Authorization: Bearer <token>
+
+{
+    "param1"   : "value1",
+}
+
+// POST = body +
+// PUT, PATCH = body +
+// GET, DELETE = no body
+// GET = query +
+
+
+// https://subdomain1.httpbin.org:80/get?name=John&age=30#sometext (URL)
+
+// https = schema
+// subdomain1.httpbin.org:80 = Host
+// subdomain1 = Subdomain
+// httpbin = Domain
+// .org = Top-Level Domain (TLD)
+// 80 = Port
+// /get = Path
+// ?name=John&age=30 = Query Parameters
+// #sometext = Fragment
