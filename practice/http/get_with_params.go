@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func getWithParams() {
+func getWithParams()(int,error) {
 	req, err := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return 0,err
 	}
 
 	q := req.URL.Query()
@@ -24,16 +24,17 @@ func getWithParams() {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return resp.StatusCode,err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("read body error:", err)
+		return resp.StatusCode,err
 	}
 	fmt.Println("URL: ", req.URL.String())
 	fmt.Println("status: ", resp.StatusCode)
 	fmt.Println("body: ", string(body))
-
+	return resp.StatusCode,err
 }
