@@ -8,16 +8,7 @@ import (
 	"time"
 )
 
-var transport = &http.Transport{
-	MaxIdleConns:    10,
-	IdleConnTimeout: 30 * time.Second,
-}
-var client = &http.Client{
-	Timeout:   5 * time.Second,
-	Transport: transport,
-}
-
-func customClient() {
+func customClient()error {
 	transport := &http.Transport{
 		MaxIdleConns:    10,
 		IdleConnTimeout: 30 * time.Second,
@@ -43,26 +34,36 @@ func customClient() {
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Println("request error:", err)
-			return
+			return err
 		}
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		fmt.Println("successful request:", string(body))
 	}
+	return nil
 }
 
-func customClientWithTimeout() {
+func customClientWithTimeout()error {
+	transport := &http.Transport{
+		MaxIdleConns:    10,
+		IdleConnTimeout: 30 * time.Second,
+	}
+	client := &http.Client{
+		Timeout:   5 * time.Second,
+		Transport: transport,
+	}
 	resp, err := client.Get("https://httpbin.org/delay/10")
 	if err != nil {
 		if os.IsTimeout(err) {
 			fmt.Println("timeout:", err)
-			return
+			return err
 		} else {
 			fmt.Println("request error:", err)
-			return
+			return err
 		}
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	fmt.Println("successful request:", string(body))
+	return nil
 }
