@@ -6,21 +6,22 @@ import (
 	"net/http"
 )
 
-func getRequest() string{
+func getRequest() (int, error) {
 	resp, err := http.Get("https://httpbin.org/get")
 	if err != nil {
 		fmt.Println(resp.Status)
-		code:=resp.Status
-		return code
+		return resp.StatusCode, err
 	}
+
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("read body error:", err)
-		code:=resp.Status
-		return code
+		return resp.StatusCode, err
 	}
+
 	fmt.Println(string(body))
-	code:=resp.Status
-	return code
+
+	return resp.StatusCode, nil
 }
