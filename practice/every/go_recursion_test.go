@@ -1,6 +1,7 @@
 package every
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -35,13 +36,15 @@ func TestRecursion(t *testing.T) {
 		{7, 5040},
 	}
 	for _, test := range testsFactorial {
-		result := Factorial(test.n)
-		if result != test.expected {
-			t.Fatalf(
-				"expected %d, got %d",
-				test.expected,
-				result,
-			)
-		}
+		t.Run(fmt.Sprintf("Factorial(%d)", test.n), func(t *testing.T) {
+			result := Factorial(test.n)
+			if result != test.expected {
+				t.Fatalf(
+					"expected %d, got %d",
+					test.expected,
+					result,
+				)
+			}
+		})
 	}
 }
