@@ -39,6 +39,59 @@ func getDoRequest(client *http.Client) func() (*http.Response, error) {
 	}
 }
 
+func retry2() (Url200Resp, error) {
+	var lastErr error
+
+	doRequest := getDoRequest(http.DefaultClient)
+
+	const maxAttempts = 3
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		result, canRetry, err := func() (Url200Resp, bool, error) {
+			resp, err := doRequest()
+			if err != nil {
+				return Url200Resp{}, true, fmt.Errorf("%w", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+				return Url200Resp{}, false, fmt.Errorf("%d", resp.StatusCode)
+			}
+
+			if resp.StatusCode >= 500 {
+				return Url200Resp{}, true, fmt.Errorf("%d", resp.StatusCode)
+			}
+
+			var urlResp Url200Resp
+			err = json.NewDecoder(resp.Body).Decode(&urlResp)
+			if err != nil {
+				return Url200Resp{}, false, fmt.Errorf("%w", err)
+			}
+
+			return urlResp, false, nil
+		}()
+
+		if err == nil {
+			return result, nil
+		}
+
+		if canRetry {
+			lastErr = err
+			fmt.Printf("attempt number %d, reason for retry: %s\n", attempt, err)
+		} else {
+			fmt.Printf("attempt number %d, reason for no retry: %s\n", attempt, err)
+			return Url200Resp{}, err
+		}
+
+		if attempt < maxAttempts {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+
+	fmt.Printf("all attempts exhausted, last error: %s\n", lastErr)
+	return Url200Resp{}, lastErr
+}
+
 func retry() (Url200Resp, error) {
 	var lastErr error
 	doRequest := getDoRequest(http.DefaultClient)
