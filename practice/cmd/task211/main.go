@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -53,16 +54,23 @@ func (api APIClient) ListPost(ctx context.Context, query ListPostQuery) ([]Post,
 		return nil, fmt.Errorf("page_size must be greater than 0")
 	}
 	start := (query.Page - 1) * query.PageSize
-	url := api.BaseURL + "/posts" +
-		"?_start=" + strconv.FormatInt(start, 10) +
-		"&_limit=" + strconv.FormatInt(query.PageSize, 10)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	u, err := url.Parse(api.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = "/posts"
+	q := u.Query()
+	q.Set("_start", strconv.FormatInt(start, 10))
+	q.Set("_limit", strconv.FormatInt(query.PageSize, 10))
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := retry(api.Client, req)
+	resp, err := api.Retry(req)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +93,18 @@ func (api APIClient) ListPost(ctx context.Context, query ListPostQuery) ([]Post,
 }
 
 func (api APIClient) GetPost(ctx context.Context, query GetPostQuery) (Post, error) {
+	u, err := url.Parse(api.BaseURL)
+	if err != nil {
+		return Post{}, err
+	}
+	u.Path = "/posts/" + query.ID
 
-	url := api.BaseURL + "/posts/" + query.ID
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return Post{}, err
 	}
 
-	resp, err := retry(api.Client, req)
+	resp, err := api.Retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -117,21 +128,25 @@ func (api APIClient) GetPost(ctx context.Context, query GetPostQuery) (Post, err
 
 func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) (Post, error) {
 
-	url := api.BaseURL + "/posts"
+	u, err := url.Parse(api.BaseURL)
+	if err != nil {
+		return Post{}, err
+	}
+	u.Path = "/posts"
 
 	jsonBody, err := json.Marshal(command)
 	if err != nil {
 		return Post{}, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return Post{}, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := retry(api.Client, req)
+	resp, err := api.Retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -152,9 +167,12 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) 
 
 }
 
-func retry(client *http.Client, req *http.Request) (resp *http.Response, err error) {
+func (api APIClient) Retry(req *http.Request) (*http.Response, error) {
+	var err error
+	var resp *http.Response
+
 	for attempt := 1; attempt <= 3; attempt++ {
-		resp, err = client.Do(req)
+		resp, err = api.Client.Do(req)
 		if err != nil {
 			fmt.Println("network error:", err)
 			continue
