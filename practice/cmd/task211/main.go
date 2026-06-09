@@ -32,6 +32,7 @@ type Post struct {
 type APIClient struct {
 	BaseURL string
 	Client  *http.Client
+	Num int
 }
 
 type ListPostQuery struct {
@@ -49,7 +50,7 @@ type CreatePostCommand struct {
 	UserID int    `json:"userID"`
 }
 
-func (api APIClient) ListPost(ctx context.Context, query ListPostQuery, num int) ([]Post, error) {
+func (api APIClient) ListPost(ctx context.Context, query ListPostQuery) ([]Post, error) {
 	if query.Page < 1 {
 
 		return nil, fmt.Errorf("page must be greater than 0")
@@ -74,7 +75,7 @@ func (api APIClient) ListPost(ctx context.Context, query ListPostQuery, num int)
 		return nil, err
 	}
 
-	resp, err := api.retry(req, num)
+	resp, err := api.retry(req)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +97,7 @@ func (api APIClient) ListPost(ctx context.Context, query ListPostQuery, num int)
 
 }
 
-func (api APIClient) GetPost(ctx context.Context, query GetPostQuery, num int) (Post, error) {
+func (api APIClient) GetPost(ctx context.Context, query GetPostQuery) (Post, error) {
 	u, err := url.Parse(api.BaseURL)
 	if err != nil {
 		return Post{}, err
@@ -108,7 +109,7 @@ func (api APIClient) GetPost(ctx context.Context, query GetPostQuery, num int) (
 		return Post{}, err
 	}
 
-	resp, err := api.retry(req, num)
+	resp, err := api.retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -130,7 +131,7 @@ func (api APIClient) GetPost(ctx context.Context, query GetPostQuery, num int) (
 
 }
 
-func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand, num int) (Post, error) {
+func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) (Post, error) {
 
 	u, err := url.Parse(api.BaseURL)
 	if err != nil {
@@ -153,7 +154,7 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand, 
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := api.retry(req, num)
+	resp, err := api.retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -174,14 +175,11 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand, 
 
 }
 
-func (api APIClient) retry(req *http.Request, num int) (*http.Response, error) {
+func (api APIClient) retry(req *http.Request) (*http.Response, error) {
 	var err error
 	var resp *http.Response
-	if num == 0 {
-		num = 3
-	}
 
-	for attempt := 1; attempt <= num; attempt++ {
+	for attempt := 1; attempt <= api.Num; attempt++ {
 		resp, err = api.Client.Do(req)
 		if err != nil {
 			fmt.Println("network error:", err)
@@ -221,6 +219,10 @@ func main() {
 		fmt.Println("type conversion error: ", err)
 		return
 	}
+	if num == 0 {
+		num = 3
+	}
+
 	if len(os.Args) < 2 {
 		fmt.Println("command required")
 		return
@@ -232,6 +234,7 @@ func main() {
 		Client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		Num: num,
 	}
 
 	command := os.Args[1]
@@ -257,7 +260,7 @@ func main() {
 		posts, err := api.ListPost(ctx, ListPostQuery{
 			Page:     page,
 			PageSize: pageSize,
-		}, num)
+		})
 
 		if err != nil {
 			fmt.Println("list error:", err)
@@ -276,7 +279,7 @@ func main() {
 		}
 		post, err := api.GetPost(ctx, GetPostQuery{
 			ID: os.Args[2],
-		}, num)
+		})
 		if err != nil {
 			fmt.Println("get error:", err)
 			return
@@ -302,7 +305,7 @@ func main() {
 			Title:  os.Args[2],
 			Body:   os.Args[3],
 			UserID: id,
-		}, num)
+		})
 		if err != nil {
 			fmt.Println("create error:", err)
 			return
