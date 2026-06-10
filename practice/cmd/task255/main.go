@@ -21,7 +21,7 @@ func main() {
 		w.Write([]byte("ok"))
 	})
 	err := http.ListenAndServe(":8080", mux)
-	if errors.Is(err, http.ErrServerClosed) {
+	if err != nil && errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("error server:", err)
 	}
 }
