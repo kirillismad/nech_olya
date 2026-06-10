@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 )
@@ -16,10 +17,11 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	})
 	err := http.ListenAndServe(":8080", mux)
-	if err != nil && err != http.ErrServerClosed {
+	if errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("error server:", err)
 	}
 }
