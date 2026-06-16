@@ -11,15 +11,16 @@ import (
 	"time"
 )
 
-//К серверу из задачи 16 добавить настоящее in-memory хранилище заметок и убрать заглушки:
-// - объявить тип Note { ID int; Title string; Body string; CreatedAt time.Time } с json-тегами id, title, body, created_at
-// - сделать тип store с полями mu sync.RWMutex, items map[int]Note, nextID int; методы Create(in Note) Note, Get(id int) (Note, bool), List(limit, offset int) []Note
-// - store создаётся в main и передаётся хэндлерам (через замыкание или метод-handler)
-// - POST /notes: декодировать тело через json.NewDecoder с DisallowUnknownFields(); валидировать, что title не пуст (иначе 422); ошибки декодирования — 400; в ответе — 201, заголовок Location: /notes/<id>, тело — созданная заметка JSON-ом
-// - GET /notes/{id}: возвращать заметку из store; если нет — 404 {"error":"not found"}
-// - GET /notes: возвращать срез List(limit, offset) как JSON-массив
-// - все ответы JSON отдавать с Content-Type: application/json до WriteHeader
-// - проверить полный цикл через curl: создать заметку, получить по id, получить список
+//К серверу из задачи 17 добавить операции обновления и удаления и навести порядок с кодами:
+// - в store реализовать Update(id int, in Note) (Note, bool) и Delete(id int) bool
+// - PUT /notes/{id}: декод JSON c DisallowUnknownFields; если заметка есть — обновить title/body, отдать 200 и обновлённую заметку; если нет — 404; пустой title — 422
+// - DELETE /notes/{id}: если есть — удалить и вернуть 204 без тела; если нет — 404
+// - ввести в коде два хелпера: writeJSON(w, code int, v any) и writeError(w, code int, msg string) (формат {"error":"..."}); переписать все существующие ответы через них
+// - убедиться, что 405 от mux всё ещё работает и содержит правильный Allow (теперь там должно появиться PUT, DELETE для /notes/{id})
+// - проверить:
+// - curl -i -X PUT -d '{"title":"x","body":"y"}' http://localhost:8080/notes/1
+// - curl -i -X DELETE http://localhost:8080/notes/1 → 204
+// - curl -i -X DELETE http://localhost:8080/notes/1 → 404
 
 type Note struct {
 	ID        int       `json:"id"`
@@ -34,7 +35,7 @@ type Store struct {
 	nextID int
 }
 
-func (s *Store) Create(in Note)Note {
+func (s *Store) Create(in Note) Note {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -59,11 +60,11 @@ func (s *Store) List(limit, offset int) []Note {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	result := make([]Note, 0,limit)
-	
-	for id:=1;id<s.nextID;id++{
-		note,ok:=s.items[id]
-		for !ok{
+	result := make([]Note, 0, limit)
+
+	for id := 1; id < s.nextID; id++ {
+		note, ok := s.items[id]
+		for !ok {
 			continue
 		}
 		if offset > 0 {
@@ -81,36 +82,49 @@ func (s *Store) List(limit, offset int) []Note {
 	return result
 }
 
+func (s *Store) Update(id int, in Note) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.items[id] = in
+}
+
+func (s *Store) Delete(id int) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.items[id]
+	if !ok {
+		return false
+	}
+	delete(s.items, id)
+	return true
+}
+
 func main() {
-	store:=&Store{
-		items: make(map[int]Note),
+	store := &Store{
+		items:  make(map[int]Note),
 		nextID: 1,
 	}
-	
+
 	mux := http.NewServeMux()
-	registerRoutes(mux,store)
+	registerRoutes(mux, store)
 	err := http.ListenAndServe(":8080", mux)
-	if err != nil && errors.Is(err, http.ErrServerClosed) {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("error server:", err)
 	}
 }
 
-func registerRoutes(mux *http.ServeMux,store *Store) {
+func registerRoutes(mux *http.ServeMux, store *Store) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		writeJSON(w, http.StatusOK, "ok")
 	})
 	mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		limitURL := r.URL.Query().Get("limit")
 		if limitURL == "" {
 			limitURL = "20"
 		}
 		limit, err := strconv.Atoi(limitURL)
 		if err != nil {
-			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error":"failed to retrieve query parameters"})
+			writeError(w, http.StatusBadRequest, "failed to retrieve query parameters")
 			return
 		}
 		offsetURL := r.URL.Query().Get("offset")
@@ -119,65 +133,114 @@ func registerRoutes(mux *http.ServeMux,store *Store) {
 		}
 		offset, err := strconv.Atoi(offsetURL)
 		if err != nil {
-			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error":"failed to retrieve query parameters"})
+			writeError(w, http.StatusBadRequest, "failed to retrieve query parameters")
 			return
 		}
 		if limit < 1 || limit > 100 || offset < 0 {
-			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error":"invalid value"})
+			writeError(w, http.StatusBadRequest, "invalid value")
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 		notes := store.List(limit, offset)
-		json.NewEncoder(w).Encode(notes)
+		writeJSON(w, http.StatusOK, notes)
+
 	})
 	mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
 		var note Note
-		dec:=json.NewDecoder(r.Body)
+		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
-		err:=dec.Decode(&note)
-		 if err != nil {
-            http.Error(w, "invalid json", http.StatusBadRequest)
-            return
-        }
-		if note.Title==""{
-			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(map[string]string{"error":"empty title"})
+		err := dec.Decode(&note)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid json")
 			return
 		}
-        
-        created := store.Create(note)
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Location",fmt.Sprintf("/notes/%d",created.ID))
-		w.WriteHeader(http.StatusCreated)
-        json.NewEncoder(w).Encode(created)
+		if note.Title == "" {
+			writeError(w, http.StatusUnprocessableEntity, "empty title")
+			return
+		}
 
+		created := store.Create(note)
+		w.Header().Set("Location", fmt.Sprintf("/notes/%d", created.ID))
+		writeJSON(w, http.StatusCreated, created)
 	})
 	mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
-			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error":"invalid id"})
+			writeError(w, http.StatusBadRequest, "invalid id")
 			return
 		}
-        
-        note, ok := store.Get(id)
-        if !ok {
-            w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error":"not found"})
-            return
-        }
-        
-        w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode(note)
 
+		note, ok := store.Get(id)
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, note)
 	})
+
+	mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		strId := r.PathValue("id")
+		id, err := strconv.Atoi(strId)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid id")
+			return
+		}
+		_, ok := store.items[id]
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+		var note Note
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		err = dec.Decode(&note)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid json")
+			return
+		}
+		if note.Title == "" {
+			writeJSON(w, http.StatusUnprocessableEntity, "empty title")
+			return
+		}
+
+		store.Update(id, note)
+		writeJSON(w, http.StatusOK, note)
+	})
+
+	mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		strId := r.PathValue("id")
+		id, err := strconv.Atoi(strId)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid id")
+			return
+		}
+		_, ok := store.items[id]
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+
+		store.Delete(id)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func writeJSON(w http.ResponseWriter, code int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	err := json.NewEncoder(w).Encode(v)
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+	}
+}
+
+func writeError(w http.ResponseWriter, code int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	err := json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+	}
 }
