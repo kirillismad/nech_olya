@@ -64,7 +64,7 @@ func (s *Store) List(limit, offset int) []Note {
 
 	for id := 1; id < s.nextID; id++ {
 		note, ok := s.items[id]
-		for !ok {
+		if !ok {
 			continue
 		}
 		if offset > 0 {
@@ -74,7 +74,7 @@ func (s *Store) List(limit, offset int) []Note {
 
 		result = append(result, note)
 
-		if len(result) >= limit {
+		if len(result) == limit {
 			break
 		}
 	}
@@ -186,7 +186,7 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 			writeError(w, http.StatusBadRequest, "invalid id")
 			return
 		}
-		_, ok := store.items[id]
+		_, ok := store.Get(id)
 		if !ok {
 			writeError(w, http.StatusNotFound, "not found")
 			return
@@ -200,7 +200,7 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 			return
 		}
 		if note.Title == "" {
-			writeJSON(w, http.StatusUnprocessableEntity, "empty title")
+			writeError(w, http.StatusUnprocessableEntity, "empty title")
 			return
 		}
 
@@ -222,7 +222,6 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		}
 
 		store.Delete(id)
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	})
 }
