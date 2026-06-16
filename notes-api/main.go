@@ -89,8 +89,8 @@ func (s *Store) Update(id int, in Note) {
 }
 
 func (s *Store) Delete(id int) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	_, ok := s.items[id]
 	if !ok {
 		return false
@@ -206,7 +206,6 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 
 		store.Update(id, note)
 		writeJSON(w, http.StatusOK, note)
-
 	})
 
 	mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +224,6 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		store.Delete(id)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
-
 	})
 }
 
