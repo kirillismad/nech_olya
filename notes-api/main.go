@@ -107,9 +107,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	registerRoutes(mux, store)
+	handler := withLogging(mux)
 	srv := &http.Server{
 		Addr:              ":8080",
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -257,4 +258,27 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 	if err != nil {
 		log.Printf("failed to encode json: %v", err)
 	}
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+		next.ServeHTTP(rec, r)
+
+		log.Printf("method=%s path=%s status=%d duration=%v remote=%s", r.Method, r.URL.Path, rec.status, time.Since(start), r.RemoteAddr)
+	})
 }
