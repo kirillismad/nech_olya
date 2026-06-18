@@ -107,7 +107,16 @@ func main() {
 
 	mux := http.NewServeMux()
 	registerRoutes(mux, store)
-	err := http.ListenAndServe(":8080", mux)
+	srv := &http.Server{
+		Addr:              ":8080",
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1 << 20,
+	}
+	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("error server:", err)
 	}
@@ -146,10 +155,16 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 	})
 	mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
 		var note Note
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<16)
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&note)
 		if err != nil {
+			var maxErr *http.MaxBytesError
+			if errors.As(err, &maxErr) {
+				writeError(w, http.StatusRequestEntityTooLarge, "request entity too large")
+				return
+			}
 			writeError(w, http.StatusBadRequest, "invalid json")
 			return
 		}
