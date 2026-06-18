@@ -15,16 +15,15 @@ import (
 const authToken = "super-secret-token"
 
 func main() {
-	mux := http.NewServeMux()
+	baseMux := http.NewServeMux()
 
-	handler := http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+	baseMux.Handle("/hello", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte("hello"))
-	})
-	handlerAndAuth := authMiddleware(handler)
-	handlerAndAuthAndLogging := loggingMiddleware(handlerAndAuth)
+	}))
+	// 20 handlers...
 
-	mux.Handle("GET /hello", recoveryMiddleware(handlerAndAuthAndLogging))
+	mux := recoveryMiddleware(loggingMiddleware(authMiddleware(baseMux)))
 
 	if err := http.ListenAndServe(":9090", mux); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
