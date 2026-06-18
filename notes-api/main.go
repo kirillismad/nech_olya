@@ -6,21 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
 )
-
-//К серверу из задачи 17 добавить операции обновления и удаления и навести порядок с кодами:
-// - в store реализовать Update(id int, in Note) (Note, bool) и Delete(id int) bool
-// - PUT /notes/{id}: декод JSON c DisallowUnknownFields; если заметка есть — обновить title/body, отдать 200 и обновлённую заметку; если нет — 404; пустой title — 422
-// - DELETE /notes/{id}: если есть — удалить и вернуть 204 без тела; если нет — 404
-// - ввести в коде два хелпера: writeJSON(w, code int, v any) и writeError(w, code int, msg string) (формат {"error":"..."}); переписать все существующие ответы через них
-// - убедиться, что 405 от mux всё ещё работает и содержит правильный Allow (теперь там должно появиться PUT, DELETE для /notes/{id})
-// - проверить:
-// - curl -i -X PUT -d '{"title":"x","body":"y"}' http://localhost:8080/notes/1
-// - curl -i -X DELETE http://localhost:8080/notes/1 → 204
-// - curl -i -X DELETE http://localhost:8080/notes/1 → 404
 
 type Note struct {
 	ID        int       `json:"id"`
@@ -107,9 +97,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	registerRoutes(mux, store)
+	handler := withRecover(withLogging(mux))
 	srv := &http.Server{
 		Addr:              ":8080",
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -123,6 +114,9 @@ func main() {
 }
 
 func registerRoutes(mux *http.ServeMux, store *Store) {
+	mux.HandleFunc("GET /panic123", func(w http.ResponseWriter, r *http.Request) {
+		panic("boom")
+	})
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
@@ -238,6 +232,37 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 
 		store.Delete(id)
 		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (sr *statusRecorder) WriteHeader(code int) {
+	sr.status = code
+	sr.ResponseWriter.WriteHeader(code)
+}
+
+func withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		log.Printf("method=%s path=%s status=%d duration=%s", r.Method, r.URL.Path, rec.status, time.Since(start))
+	})
+}
+
+func withRecover(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("panic recovered: %v\n%s", rec, debug.Stack())
+				writeError(w, http.StatusInternalServerError, "internal server error")
+			}
+		}()
+		next.ServeHTTP(w, r)
 	})
 }
 
