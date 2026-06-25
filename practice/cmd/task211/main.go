@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -29,6 +32,7 @@ type Post struct {
 type APIClient struct {
 	BaseURL string
 	Client  *http.Client
+	Num int
 }
 
 type ListPostQuery struct {
@@ -41,8 +45,9 @@ type GetPostQuery struct {
 }
 
 type CreatePostCommand struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	UserID int    `json:"userID"`
 }
 
 func (api APIClient) ListPost(ctx context.Context, query ListPostQuery) ([]Post, error) {
@@ -70,7 +75,7 @@ func (api APIClient) ListPost(ctx context.Context, query ListPostQuery) ([]Post,
 		return nil, err
 	}
 
-	resp, err := api.Retry(req)
+	resp, err := api.retry(req)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +109,7 @@ func (api APIClient) GetPost(ctx context.Context, query GetPostQuery) (Post, err
 		return Post{}, err
 	}
 
-	resp, err := api.Retry(req)
+	resp, err := api.retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -139,6 +144,9 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) 
 		return Post{}, err
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return Post{}, err
@@ -146,7 +154,7 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) 
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := api.Retry(req)
+	resp, err := api.retry(req)
 	if err != nil {
 		return Post{}, err
 	}
@@ -167,14 +175,23 @@ func (api APIClient) CreatePost(ctx context.Context, command CreatePostCommand) 
 
 }
 
-func (api APIClient) Retry(req *http.Request) (*http.Response, error) {
+func (api APIClient) retry(req *http.Request) (*http.Response, error) {
 	var err error
 	var resp *http.Response
 
-	for attempt := 1; attempt <= 3; attempt++ {
+	for attempt := 1; attempt <= api.Num; attempt++ {
 		resp, err = api.Client.Do(req)
 		if err != nil {
 			fmt.Println("network error:", err)
+			continue
+		}
+		if resp.StatusCode >= 500 {
+			fmt.Println("invalid status code:", resp.StatusCode)
+			err = fmt.Errorf("invalid status code: %d", resp.StatusCode)
+			continue
+		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			fmt.Println("request timeout:", err)
 			continue
 		}
 		return resp, nil
@@ -183,6 +200,29 @@ func (api APIClient) Retry(req *http.Request) (*http.Response, error) {
 }
 
 func main() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		fmt.Println("request canceled")
+		os.Exit(1)
+	}()
+
+	strValue := os.Getenv("RETRY_COUNT")
+	if strValue == "" {
+		strValue = "0"
+	}
+
+	num, err := strconv.Atoi(strValue)
+	if err != nil {
+		fmt.Println("type conversion error: ", err)
+		return
+	}
+	if num == 0 {
+		num = 3
+	}
+
 	if len(os.Args) < 2 {
 		fmt.Println("command required")
 		return
@@ -194,6 +234,7 @@ func main() {
 		Client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		Num: num,
 	}
 
 	command := os.Args[1]
@@ -250,23 +291,30 @@ func main() {
 			post.Body,
 		)
 	case "create":
-		if len(os.Args) < 4 {
+		if len(os.Args) < 5 {
 
 			fmt.Println("title and body required")
 			return
 		}
+		id, err := strconv.Atoi(os.Args[4])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		post, err := api.CreatePost(ctx, CreatePostCommand{
-			Title: os.Args[2],
-			Body:  os.Args[3],
+			Title:  os.Args[2],
+			Body:   os.Args[3],
+			UserID: id,
 		})
 		if err != nil {
 			fmt.Println("create error:", err)
 			return
 		}
-		fmt.Printf("Created post:\nID: %d\nTitle: %s\nBody: %s\n",
+		fmt.Printf("Created post:\nID: %d\nTitle: %s\nBody: %s\nUserID: %d\n",
 			post.ID,
 			post.Title,
 			post.Body,
+			post.UserID,
 		)
 	default:
 		fmt.Println("unknown command:", command)
