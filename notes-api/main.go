@@ -141,7 +141,10 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
+
 	notesMux := http.NewServeMux()
+
+	// GET localhost:8080/ -> localhost:8080/notes/
 	notesMux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		limitURL := r.URL.Query().Get("limit")
 		if limitURL == "" {
@@ -169,6 +172,7 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, notes)
 
 	})
+	// POST localhost:8080/ -> localhost:8080/notes/
 	notesMux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
 		var note Note
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<16)
@@ -193,6 +197,7 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 		w.Header().Set("Location", fmt.Sprintf("/notes/%d", created.ID))
 		writeJSON(w, http.StatusCreated, created)
 	})
+	// GET localhost:8080/{id} -> localhost:8080/notes/{id}
 	notesMux.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
@@ -210,6 +215,7 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, note)
 	})
 
+	// PUT localhost:8080/{id} -> localhost:8080/notes/{id}
 	notesMux.HandleFunc("PUT /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
@@ -242,6 +248,7 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, note)
 	})
 
+	// DELETE localhost:8080/{id} -> localhost:8080/notes/{id}
 	notesMux.HandleFunc("DELETE /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
@@ -262,6 +269,8 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("boom")
 	})
+
+	// GET localhost:8080/notes
 	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
 }
 
