@@ -114,8 +114,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	notesMux := http.NewServeMux()
-	registerRoutes(mux, notesMux, store, token)
+	registerRoutes(mux, store, token)
 
 	handler := withRecover(withLogging(mux))
 	srv := &http.Server{
@@ -133,10 +132,11 @@ func main() {
 	}
 }
 
-func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
+func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
+	notesMux := http.NewServeMux()
 	notesMux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		limitURL := r.URL.Query().Get("limit")
 		if limitURL == "" {
@@ -254,7 +254,6 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("boom")
 	})
-	mux.Handle("/notes", withAuth(token, notesMux))
 	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
 }
 
