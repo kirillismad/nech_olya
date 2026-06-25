@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -34,6 +36,11 @@ type Store struct {
 	mu     sync.RWMutex
 	items  map[int]Note
 	nextID int
+}
+
+type NoteUpdateRequest struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
 }
 
 func (s *Store) Create(in Note) Note {
@@ -101,13 +108,19 @@ func (s *Store) Delete(id int) bool {
 }
 
 func main() {
+	token := os.Getenv("API_TOKEN")
+	if token == "" {
+		log.Fatal("invalid token")
+	}
+
 	store := &Store{
 		items:  make(map[int]Note),
 		nextID: 1,
 	}
 
 	mux := http.NewServeMux()
-	registerRoutes(mux, store)
+	registerRoutes(mux, store, token)
+
 	handler := withRecover(withLogging(mux))
 	srv := &http.Server{
 		Addr:              ":8080",
@@ -124,11 +137,15 @@ func main() {
 	}
 }
 
-func registerRoutes(mux *http.ServeMux, store *Store) {
+func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
-	mux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
+
+	notesMux := http.NewServeMux()
+
+	// GET localhost:8080/ -> localhost:8080/notes/
+	notesMux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		limitURL := r.URL.Query().Get("limit")
 		if limitURL == "" {
 			limitURL = "20"
@@ -155,7 +172,8 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		writeJSON(w, http.StatusOK, notes)
 
 	})
-	mux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
+	// POST localhost:8080/ -> localhost:8080/notes/
+	notesMux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
 		var note Note
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<16)
 		dec := json.NewDecoder(r.Body)
@@ -179,7 +197,8 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		w.Header().Set("Location", fmt.Sprintf("/notes/%d", created.ID))
 		writeJSON(w, http.StatusCreated, created)
 	})
-	mux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// GET localhost:8080/{id} -> localhost:8080/notes/{id}
+	notesMux.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
@@ -196,7 +215,41 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		writeJSON(w, http.StatusOK, note)
 	})
 
-	mux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// PUT localhost:8080/{id} -> localhost:8080/notes/{id}
+	notesMux.HandleFunc("PUT /{id}", func(w http.ResponseWriter, r *http.Request) {
+		strId := r.PathValue("id")
+		id, err := strconv.Atoi(strId)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid id")
+			return
+		}
+		note, ok := store.Get(id)
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+		var noteRequest NoteUpdateRequest
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		err = dec.Decode(&noteRequest)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid json")
+			return
+		}
+		if noteRequest.Title == "" {
+			writeError(w, http.StatusUnprocessableEntity, "empty title")
+			return
+		}
+
+		note.Body = noteRequest.Body
+		note.Title = noteRequest.Title
+
+		store.Update(id, note)
+		writeJSON(w, http.StatusOK, note)
+	})
+
+	// DELETE localhost:8080/{id} -> localhost:8080/notes/{id}
+	notesMux.HandleFunc("DELETE /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
@@ -204,35 +257,6 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 			return
 		}
 		_, ok := store.Get(id)
-		if !ok {
-			writeError(w, http.StatusNotFound, "not found")
-			return
-		}
-		var note Note
-		dec := json.NewDecoder(r.Body)
-		dec.DisallowUnknownFields()
-		err = dec.Decode(&note)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid json")
-			return
-		}
-		if note.Title == "" {
-			writeError(w, http.StatusUnprocessableEntity, "empty title")
-			return
-		}
-
-		store.Update(id, note)
-		writeJSON(w, http.StatusOK, note)
-	})
-
-	mux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
-		strId := r.PathValue("id")
-		id, err := strconv.Atoi(strId)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid id")
-			return
-		}
-		_, ok := store.items[id]
 		if !ok {
 			writeError(w, http.StatusNotFound, "not found")
 			return
@@ -245,6 +269,9 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("boom")
 	})
+
+	// GET localhost:8080/notes
+	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -298,5 +325,26 @@ func withRecover(next http.Handler) http.Handler {
 			}
 		}()
 		next.ServeHTTP(w, r)
+	})
+}
+
+func withAuth(token string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get("Authorization")
+
+		parts := strings.Fields(auth)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		if parts[1] != token {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+
 	})
 }
