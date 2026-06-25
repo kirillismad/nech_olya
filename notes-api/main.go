@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -136,7 +137,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
-	notesMux.HandleFunc("GET /notes", func(w http.ResponseWriter, r *http.Request) {
+	notesMux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		limitURL := r.URL.Query().Get("limit")
 		if limitURL == "" {
 			limitURL = "20"
@@ -163,7 +164,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, notes)
 
 	})
-	notesMux.HandleFunc("POST /notes", func(w http.ResponseWriter, r *http.Request) {
+	notesMux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
 		var note Note
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<16)
 		dec := json.NewDecoder(r.Body)
@@ -187,7 +188,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 		w.Header().Set("Location", fmt.Sprintf("/notes/%d", created.ID))
 		writeJSON(w, http.StatusCreated, created)
 	})
-	notesMux.HandleFunc("GET /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+	notesMux.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
@@ -204,7 +205,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, note)
 	})
 
-	notesMux.HandleFunc("PUT /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+	notesMux.HandleFunc("PUT /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
@@ -233,7 +234,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 		writeJSON(w, http.StatusOK, note)
 	})
 
-	notesMux.HandleFunc("DELETE /notes/{id}", func(w http.ResponseWriter, r *http.Request) {
+	notesMux.HandleFunc("DELETE /{id}", func(w http.ResponseWriter, r *http.Request) {
 		strId := r.PathValue("id")
 		id, err := strconv.Atoi(strId)
 		if err != nil {
@@ -254,7 +255,7 @@ func registerRoutes(mux, notesMux *http.ServeMux, store *Store, token string) {
 		panic("boom")
 	})
 	mux.Handle("/notes", withAuth(token, notesMux))
-	mux.Handle("/notes/", withAuth(token, notesMux))
+	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -314,8 +315,15 @@ func withRecover(next http.Handler) http.Handler {
 func withAuth(token string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
-		if auth != "Bearer "+token {
+
+		parts := strings.Fields(auth)
+		if len(parts) != 2 || parts[0] != "Bearer" {
 			w.Header().Set("WWW-Authenticate", "Bearer")
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		if parts[1] != token {
 			writeError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
