@@ -38,6 +38,11 @@ type Store struct {
 	nextID int
 }
 
+type NoteUpdateRequest struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
 func (s *Store) Create(in Note) Note {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -212,23 +217,26 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 			writeError(w, http.StatusBadRequest, "invalid id")
 			return
 		}
-		_, ok := store.Get(id)
+		note, ok := store.Get(id)
 		if !ok {
 			writeError(w, http.StatusNotFound, "not found")
 			return
 		}
-		var note Note
+		var noteRequest NoteUpdateRequest
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
-		err = dec.Decode(&note)
+		err = dec.Decode(&noteRequest)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "invalid json")
 			return
 		}
-		if note.Title == "" {
+		if noteRequest.Title == "" {
 			writeError(w, http.StatusUnprocessableEntity, "empty title")
 			return
 		}
+
+		note.Body = noteRequest.Body
+		note.Title = noteRequest.Title
 
 		store.Update(id, note)
 		writeJSON(w, http.StatusOK, note)
