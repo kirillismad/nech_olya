@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
@@ -107,7 +108,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	registerRoutes(mux, store)
-	handler := withLogging(mux)
+	handler := withRecover(withLogging(mux))
 	srv := &http.Server{
 		Addr:              ":8080",
 		Handler:           handler,
@@ -240,6 +241,10 @@ func registerRoutes(mux *http.ServeMux, store *Store) {
 		store.Delete(id)
 		w.WriteHeader(http.StatusNoContent)
 	})
+
+	mux.HandleFunc("GET /panic", func(w http.ResponseWriter, r *http.Request) {
+		panic("boom")
+	})
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -280,5 +285,18 @@ func withLogging(next http.Handler) http.Handler {
 		next.ServeHTTP(rec, r)
 
 		log.Printf("method=%s path=%s status=%d duration=%v remote=%s", r.Method, r.URL.Path, rec.status, time.Since(start), r.RemoteAddr)
+	})
+}
+
+func withRecover(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("%s %s", rec, debug.Stack())
+				writeError(w, http.StatusInternalServerError, "internal server error")
+
+			}
+		}()
+		next.ServeHTTP(w, r)
 	})
 }
