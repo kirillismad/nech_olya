@@ -113,9 +113,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	notesMux := http.NewServeMux()
-	registerRoutes(mux, notesMux, store, token)
-
+	registerRoutes(mux, store)
 	handler := withRecover(withLogging(mux))
 	srv := &http.Server{
 		Addr:              ":8080",
