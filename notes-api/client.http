@@ -91,3 +91,9 @@ GET {{baseUrl}}/notes
 # @prompt noteId
 PATCH {{baseUrl}}/notes/{{noteId}}
 Authorization: Bearer {{token}}
+
+###
+# @name notes-with-context
+
+GET {{baseUrl}}/notes/1/render
+Authorization: Bearer {{token}}

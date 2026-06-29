@@ -273,6 +273,34 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 
 	// GET localhost:8080/notes
 	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
+
+	notesMux.HandleFunc("GET /{id}/render", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		strId := r.PathValue("id")
+		id, err := strconv.Atoi(strId)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid id")
+			return
+		}
+
+		note, ok := store.Get(id)
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+
+		done := make(chan string, 1)
+		go func() { time.Sleep(5 * time.Second); done <- "<rendered html>" }()
+		select {
+		case <-ctx.Done():
+			log.Printf("render cancelled: id=%d err=%v note=%v", id, ctx.Err(), note)
+			return
+		case res := <-done:
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(res))
+		}
+	})
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
