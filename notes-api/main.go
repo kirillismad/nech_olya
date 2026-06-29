@@ -138,6 +138,7 @@ func main() {
 }
 
 func registerRoutes(mux *http.ServeMux, store *Store, token string) {
+	mux.Handle("GET /docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, "ok")
 	})
