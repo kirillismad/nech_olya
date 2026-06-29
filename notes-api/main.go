@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -131,10 +134,24 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 	}
-	err := srv.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal("error server:", err)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("server error: %s", err)
+		}
+	}()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown error: %s", err)
+		return
 	}
+	log.Println("shutting down…")
 }
 
 func registerRoutes(mux *http.ServeMux, store *Store, token string) {
@@ -273,6 +290,34 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 
 	// GET localhost:8080/notes
 	mux.Handle("/notes/", withAuth(token, http.StripPrefix("/notes", notesMux)))
+
+	notesMux.HandleFunc("GET /{id}/render", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		strId := r.PathValue("id")
+		id, err := strconv.Atoi(strId)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid id")
+			return
+		}
+
+		note, ok := store.Get(id)
+		if !ok {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
+
+		done := make(chan string, 1)
+		go func() { time.Sleep(5 * time.Second); done <- "<rendered html>" }()
+		select {
+		case <-ctx.Done():
+			log.Printf("render cancelled: id=%d err=%v note=%v", id, ctx.Err(), note)
+			return
+		case res := <-done:
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(res))
+		}
+	})
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
