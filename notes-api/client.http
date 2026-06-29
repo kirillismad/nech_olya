@@ -97,3 +97,11 @@ Authorization: Bearer {{token}}
 
 GET {{baseUrl}}/notes/1/render
 Authorization: Bearer {{token}}
+
+###
+# @name health-check
+GET {{baseUrl}}/docs/
+
+###
+# @name health-check
+GET {{baseUrl}}/panic
