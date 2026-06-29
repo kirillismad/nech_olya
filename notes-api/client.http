@@ -1,0 +1,93 @@
+@baseUrl = http://localhost:8080
+@token = token123
+
+###
+# @name health-check
+GET {{baseUrl}}/health
+
+###
+# @name get-notes
+GET {{baseUrl}}/notes?limit=20&offset=0
+Authorization: Bearer {{token}}
+
+###
+# @name create-note
+POST {{baseUrl}}/notes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+	"title": "First note",
+	"body": "Hello from REST Client"
+}
+
+###
+# @name get-note-by-id
+# @prompt noteId
+GET {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+# @name update-note-by-id
+# @prompt noteId
+PUT {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+	"title": "Updated title",
+	"body": "Updated body"
+}
+
+###
+# @name put-empty-title-should-422
+# @prompt noteId
+PUT {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+	"title": "",
+	"body": "Body"
+}
+
+###
+# @name put-invalid-json-should-400
+# @prompt noteId
+PUT {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+	"title": "Body is digit",
+	"body": 123
+}
+
+###
+# @name put-unknown-field-should-400
+# @prompt noteId
+PUT {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+	"title": "x",
+	"body": "y",
+	"extra": "unknown"
+}
+
+###
+# @name delete-note-by-id
+# @prompt noteId
+DELETE {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+
+###
+# @name notes-without-auth-should-401
+GET {{baseUrl}}/notes
+
+###
+# @name notes-wrong-method-should-405
+# @prompt noteId
+PATCH {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
