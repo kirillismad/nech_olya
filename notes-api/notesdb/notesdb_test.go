@@ -1,7 +1,6 @@
 package notesdb
 
 import (
-	"log"
 	"testing"
 )
 
@@ -16,7 +15,7 @@ func TestOpenInMemory_PingOk(t *testing.T) {
 func TestOpenInMemory_IsUsable(t *testing.T) {
 	db, err := OpenInMemory()
 	if err != nil {
-		log.Println(err)
+		t.Fatal(err)
 	}
 	defer db.Close()
 	_, err = db.Exec("CREATE TABLE t(id INTEGER)")
