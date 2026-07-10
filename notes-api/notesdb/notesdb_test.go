@@ -102,3 +102,96 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		}
 	}
 }
+
+func TestInsertNote_ReturnsID(t *testing.T) {
+	db := newTestDB(t)
+	ctx := context.Background()
+	err := Migrate(ctx, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	title := "title"
+	body := "body"
+	id, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id <= 0 {
+		t.Fatalf("id: %d", id)
+	}
+	t.Logf("id: %d ", id)
+	id, err = InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id <= 0 {
+		t.Fatalf("id: %d", id)
+	}
+	t.Logf("id: %d", id)
+}
+
+func TestInsertNote_RowExists(t *testing.T) {
+	db := newTestDB(t)
+	ctx := context.Background()
+	err := Migrate(ctx, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	title := "title"
+	body := "body"
+	id, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var notes []string
+
+	rows, err := db.QueryContext(ctx, `SELECT title, body FROM notes WHERE id = ?`, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var title string
+		var body string
+		if err := rows.Scan(&title, &body); err != nil {
+			t.Fatal(err)
+		}
+		notes = append(notes, title, body)
+	}
+	for _, note := range notes {
+		t.Log(note)
+	}
+}
+
+func TestInsertNote_SpecialChars(t *testing.T) {
+	db := newTestDB(t)
+	ctx := context.Background()
+
+	if err := Migrate(ctx, db); err != nil {
+		t.Fatal(err)
+	}
+
+	title := "Robert'); DROP TABLE notes;--"
+	body := "test body"
+
+	_, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var count int
+
+	err = db.QueryRowContext(
+		ctx,
+		"SELECT count(*) FROM notes",
+	).Scan(&count)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if count != 1 {
+		t.Fatalf("count = %d, want 1", count)
+	}
+}
