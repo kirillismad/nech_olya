@@ -100,7 +100,7 @@ Authorization: Bearer {{token}}
 
 ###
 # @name health-check
-GET {{baseUrl}}/docs/
+GET {{baseUrl}}/docs/openapi.json
 
 ###
 # @name health-check

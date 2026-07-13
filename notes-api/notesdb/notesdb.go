@@ -31,3 +31,4 @@ title TEXT NOT NULL, body TEXT, created_at DATETIME NOT NULL DEFAULT CURRENT_TIM
 	}
 	return nil
 }
+

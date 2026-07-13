@@ -32,6 +32,7 @@ func TestOpenInMemory_PingOk(t *testing.T) {
 func TestOpenInMemory_IsUsable(t *testing.T) {
 	db := newTestDB(t)
 	_, err := db.Exec("CREATE TABLE t(id INTEGER)")
+
 	if err != nil {
 		t.Fatal(err)
 	}
