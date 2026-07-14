@@ -74,6 +74,11 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 	db := newTestDB(t)
 	ctx := context.Background()
 
+	err := Migrate(ctx, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	notes := map[string]bool{
 		"id":         false,
 		"title":      false,
