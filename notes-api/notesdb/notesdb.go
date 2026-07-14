@@ -32,15 +32,15 @@ title TEXT NOT NULL, body TEXT, created_at DATETIME NOT NULL DEFAULT CURRENT_TIM
 	return nil
 }
 
-func InsertNote(ctx context.Context,db *sql.DB,title,body string)(int64,error){
-	result,err:=db.ExecContext(ctx,`INSERT INTO notes(title,body) VALUES(?,?)`,title,body)
+func InsertNote(ctx context.Context, db *sql.DB, title, body string) (int64, error) {
+	result, err := db.ExecContext(ctx, `INSERT INTO notes(title,body) VALUES(?,?)`, title, body)
 	if err != nil {
-		return 0,fmt.Errorf("frequest could not be completed: %w", err)
+		return 0, fmt.Errorf("frequest could not be completed: %w", err)
 	}
-	id,err:=result.LastInsertId()
-	if err!=nil{
-		return 0,fmt.Errorf("failed to retrieve id: %w", err)
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve id: %w", err)
 	}
 
-	return id,nil
+	return id, nil
 }

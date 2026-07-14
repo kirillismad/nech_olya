@@ -32,6 +32,7 @@ func TestOpenInMemory_PingOk(t *testing.T) {
 func TestOpenInMemory_IsUsable(t *testing.T) {
 	db := newTestDB(t)
 	_, err := db.Exec("CREATE TABLE t(id INTEGER)")
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,6 +78,8 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer rows.Close()
+
 	notes := map[string]bool{
 		"id":         false,
 		"title":      false,
@@ -92,13 +95,14 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		if _, ok := notes[name]; ok {
 			notes[name] = true
 		}
-		if err := rows.Err(); err != nil {
+
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	for _, exist := range notes {
+		if !exist {
 			t.Fatal(err)
-		}
-		for _, exist := range notes {
-			if !exist {
-				t.Fatal(err)
-			}
 		}
 	}
 }

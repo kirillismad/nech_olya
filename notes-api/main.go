@@ -143,10 +143,12 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
 	<-ctx.Done()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("server shutdown error: %s", err)
 		return
@@ -307,7 +309,12 @@ func registerRoutes(mux *http.ServeMux, store *Store, token string) {
 		}
 
 		done := make(chan string, 1)
-		go func() { time.Sleep(5 * time.Second); done <- "<rendered html>" }()
+		defer close(done)
+
+		go func() {
+			time.Sleep(5 * time.Second)
+			done <- "<rendered html>"
+		}()
 		select {
 		case <-ctx.Done():
 			log.Printf("render cancelled: id=%d err=%v note=%v", id, ctx.Err(), note)
