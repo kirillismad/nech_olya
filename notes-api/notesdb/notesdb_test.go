@@ -73,12 +73,6 @@ func TestMigrate_Idempotent(t *testing.T) {
 func TestMigrate_SchemaColumns(t *testing.T) {
 	db := newTestDB(t)
 	ctx := context.Background()
-	rows, err := db.QueryContext(ctx, `SELECT name FROM pragma_table_info('notes')`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer rows.Close()
 
 	notes := map[string]bool{
 		"id":         false,
@@ -86,6 +80,13 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		"body":       false,
 		"created_at": false,
 	}
+
+	rows, err := db.QueryContext(ctx, `SELECT name FROM pragma_table_info('notes')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var name string
@@ -97,9 +98,11 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		}
 
 	}
+
 	if err := rows.Err(); err != nil {
 		t.Fatal(err)
 	}
+
 	for _, exist := range notes {
 		if !exist {
 			t.Fatal(err)
