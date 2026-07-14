@@ -78,7 +78,7 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer db.Close()
+	defer rows.Close()
 
 	notes := map[string]bool{
 		"id":         false,
@@ -95,14 +95,14 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 		if _, ok := notes[name]; ok {
 			notes[name] = true
 		}
-		
+
 	}
 	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	for _, exist := range notes {
+		if !exist {
 			t.Fatal(err)
 		}
-		for _, exist := range notes {
-			if !exist {
-				t.Fatal(err)
-			}
-		}
+	}
 }
