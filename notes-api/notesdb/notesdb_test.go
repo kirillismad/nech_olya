@@ -3,6 +3,7 @@ package notesdb
 import (
 	"context"
 	"database/sql"
+	"log"
 	"testing"
 )
 
@@ -129,7 +130,7 @@ func TestInsertNote_ReturnsID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if id <= 0 {
+	if id != 1 {
 		t.Fatalf("id: %d", id)
 	}
 	t.Logf("id: %d ", id)
@@ -137,7 +138,7 @@ func TestInsertNote_ReturnsID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if id <= 0 {
+	if id != 2 {
 		t.Fatalf("id: %d", id)
 	}
 	t.Logf("id: %d", id)
@@ -158,22 +159,32 @@ func TestInsertNote_RowExists(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var notes []string
+	type row struct {
+		title string
+		body  string
+	}
+	var notes []row
 
 	rows, err := db.QueryContext(ctx, `SELECT title, body FROM notes WHERE id = ?`, id)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer rows.Close()
+
 	for rows.Next() {
-		var title string
-		var body string
-		if err := rows.Scan(&title, &body); err != nil {
+		var r row
+		if err := rows.Scan(&r.title, &r.body); err != nil {
 			t.Fatal(err)
 		}
-		notes = append(notes, title, body)
+		notes = append(notes, r)
 	}
-	for _, note := range notes {
-		t.Log(note)
+
+	if rows.Err() != nil {
+		log.Fatal("failed to collect rows")
+	}
+
+	if len(notes) != 1 {
+		t.Fatalf("expected 1 notes, got %d", len(notes))
 	}
 }
 
