@@ -3,7 +3,7 @@ package notesdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"log"
 	"testing"
 )
 
@@ -116,90 +116,105 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 	}
 }
 
-/*
-
-create table profiles (
-	id integer PRIMARY KEY NOT NULL, -- .... -1, 0, 1, ...
-	name text NULL,
-	surname text NULL,
-	age integer NULL
-)
-
-*/
-
-func TestNull(t *testing.T) {
-	// Воображаемый реквест, который мы получили от клиента. В реальном приложении это будет приходить в виде JSON.
-	// Поля могут быть null, поэтому мы используем указатели, чтобы отличать "поле указано" от "поле не указано".
-	// Иногда zero value может быть признаком того что поле не было указано. Это актуально для тех случаев когда значение не может быть физически равно zero value
-	// Например, можно было бы сделать Name string, и просто воспринимать пустую строку как "не указано". В реальной жизни, в таких случаях, разработчики обычно просто договариваются что использовать zero value или указатель.
-	type Request struct {
-		ID      int64   `json:"id"`
-		Name    *string `json:"name,omitempty"`
-		Surname *string `json:"surname,omitempty"`
-		Age     *int64  `json:"age,omitempty"`
-	}
-	// Структура, которая будет использоваться для сканирования данных из базы данных. Здесь мы используем sql.NullString, *string (указатель) и sql.Null[int64] для обработки возможных NULL значений.
-	type ProfileRow struct {
-		ID      int64
-		Name    sql.NullString
-		Surname *string
-		Age     sql.Null[int64] // go 1.22, джинерики (generic types) = обобщения типов
-	}
-
+func TestInsertNote_ReturnsID(t *testing.T) {
 	db := newTestDB(t)
-
-	_, err := db.Exec("CREATE TABLE profiles (id INTEGER PRIMARY KEY NOT NULL, name TEXT NULL, surname TEXT NULL, age INTEGER NULL)")
+	ctx := context.Background()
+	err := Migrate(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = db.Exec("INSERT INTO profiles (id, name, surname, age) VALUES (1, 'John', 'Doe', 30), (2, NULL, 'Smith', NULL), (3, 'Alice', NULL, 25)")
+	title := "title"
+	body := "body"
+	id, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != 1 {
+		t.Fatalf("id: %d", id)
+	}
+	t.Logf("id: %d ", id)
+	id, err = InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != 2 {
+		t.Fatalf("id: %d", id)
+	}
+	t.Logf("id: %d", id)
+}
+
+func TestInsertNote_RowExists(t *testing.T) {
+	db := newTestDB(t)
+	ctx := context.Background()
+	err := Migrate(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rows, err := db.Query("SELECT id, name, surname, age FROM profiles")
+	title := "title"
+	body := "body"
+	id, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type row struct {
+		title string
+		body  string
+	}
+	var notes []row
+
+	rows, err := db.QueryContext(ctx, `SELECT title, body FROM notes WHERE id = ?`, id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer rows.Close()
 
-	profiles := make([]ProfileRow, 0)
-
 	for rows.Next() {
-		var p ProfileRow // zero value of ProfileRow
-		if err := rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Age); err != nil {
+		var r row
+		if err := rows.Scan(&r.title, &r.body); err != nil {
 			t.Fatal(err)
 		}
-		profiles = append(profiles, p)
+		notes = append(notes, r)
 	}
 
-	if err := rows.Err(); err != nil {
+	if rows.Err() != nil {
+		log.Fatal("failed to collect rows")
+	}
+
+	if len(notes) != 1 {
+		t.Fatalf("expected 1 notes, got %d", len(notes))
+	}
+}
+
+func TestInsertNote_SpecialChars(t *testing.T) {
+	db := newTestDB(t)
+	ctx := context.Background()
+
+	if err := Migrate(ctx, db); err != nil {
 		t.Fatal(err)
 	}
 
-	for _, p := range profiles {
-		resultString := fmt.Sprintf("ID: %d", p.ID)
+	title := "Robert'); DROP TABLE notes;--"
+	body := "test body"
 
-		if p.Name.Valid {
-			resultString += ", Name: " + p.Name.String
-		} else {
-			resultString += ", Name: NULL"
-		}
-
-		if p.Surname != nil {
-			resultString += ", Surname: " + *p.Surname
-		} else {
-			resultString += ", Surname: NULL"
-		}
-
-		if p.Age.Valid {
-			resultString = fmt.Sprintf("%s, Age: %d", resultString, p.Age.V)
-		} else {
-			resultString += ", Age: NULL"
-		}
-
-		t.Log(resultString)
+	_, err := InsertNote(ctx, db, title, body)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	var count int
+
+	err = db.QueryRowContext(
+		ctx,
+		"SELECT count(*) FROM notes",
+	).Scan(&count)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if count != 1 {
+		t.Fatalf("count = %d, want 1", count)
+	}
 }
