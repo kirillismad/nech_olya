@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// newTestDB создает временную in-memory базу данных SQLite для тестов.
 func newTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 
