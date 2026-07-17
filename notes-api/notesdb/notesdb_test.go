@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func newTestDB(t *testing.T) *sql.DB {
+func NewTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 
 	db, err := OpenInMemory()
@@ -31,7 +31,7 @@ func TestOpenInMemory_PingOk(t *testing.T) {
 }
 
 func TestOpenInMemory_IsUsable(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	_, err := db.Exec("CREATE TABLE t(id INTEGER)")
 
 	if err != nil {
@@ -40,7 +40,7 @@ func TestOpenInMemory_IsUsable(t *testing.T) {
 }
 
 func TestMigrate_CreatesTable(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 	err := Migrate(ctx, db)
 	if err != nil {
@@ -59,7 +59,7 @@ func TestMigrate_CreatesTable(t *testing.T) {
 }
 
 func TestMigrate_Idempotent(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 	err := Migrate(ctx, db)
 	if err != nil {
@@ -72,7 +72,7 @@ func TestMigrate_Idempotent(t *testing.T) {
 }
 
 func TestMigrate_SchemaColumns(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 
 	err := Migrate(ctx, db)
@@ -117,7 +117,7 @@ func TestMigrate_SchemaColumns(t *testing.T) {
 }
 
 func TestInsertNote_ReturnsID(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 	err := Migrate(ctx, db)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestInsertNote_ReturnsID(t *testing.T) {
 }
 
 func TestInsertNote_RowExists(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 	err := Migrate(ctx, db)
 	if err != nil {
@@ -189,7 +189,7 @@ func TestInsertNote_RowExists(t *testing.T) {
 }
 
 func TestInsertNote_SpecialChars(t *testing.T) {
-	db := newTestDB(t)
+	db := NewTestDB(t)
 	ctx := context.Background()
 
 	if err := Migrate(ctx, db); err != nil {
