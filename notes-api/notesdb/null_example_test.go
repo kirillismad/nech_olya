@@ -89,7 +89,7 @@ func TestNull(t *testing.T) {
 	}
 
 	// Поднимаем тестовую БД (в памяти или во временном окружении).
-	db := newTestDB(t)
+	db := NewTestDB(t)
 
 	// Создаем таблицу с nullable-колонками name/surname/age.
 	_, err := db.Exec(createTableStatement)
