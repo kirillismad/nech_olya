@@ -15,7 +15,7 @@ func ListNotes(ctx context.Context, db *sql.DB) ([]Note, error) {
 	}
 	defer rows.Close()
 
-	var notes []Note
+	notes := make([]Note, 0)
 	for rows.Next() {
 		var n Note
 		err := rows.Scan(&n.ID, &n.Title, &n.Body, &n.CreatedAt)
@@ -29,8 +29,5 @@ func ListNotes(ctx context.Context, db *sql.DB) ([]Note, error) {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
-	if notes == nil {
-		return []Note{}, nil
-	}
 	return notes, nil
 }
