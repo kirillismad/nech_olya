@@ -23,7 +23,7 @@ type NullableNote struct {
 	CreatedAt time.Time
 }
 
-func InsertNullable(ctx context.Context, title string, body *string, db *sql.DB) (int64, error) {
+func InsertNullable(ctx context.Context, db *sql.DB, title string, body *string) (int64, error) {
 	var query string
 	var args []interface{}
 	if body == nil {
@@ -44,7 +44,7 @@ func InsertNullable(ctx context.Context, title string, body *string, db *sql.DB)
 	return id, nil
 }
 
-func GetNullable(ctx context.Context, id int64, db *sql.DB) (NullableNote, error) {
+func GetNullable(ctx context.Context, db *sql.DB, id int64) (NullableNote, error) {
 	var note NullableNote
 	err := db.QueryRowContext(ctx, "SELECT id, title, body, created_at FROM notes WHERE id = ?", id).Scan(&note.ID, &note.Title, &note.Body, &note.CreatedAt)
 	if err != nil {

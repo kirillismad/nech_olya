@@ -23,11 +23,11 @@ func TestInsertNullable_WithBody(t *testing.T) {
 	db := setupTestDB(t)
 	ctx := context.Background()
 	strPtr := "hello"
-	id, err := InsertNullable(ctx, "t", &strPtr, db)
+	id, err := InsertNullable(ctx, db, "t", &strPtr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	note, err := GetNullable(ctx, id, db)
+	note, err := GetNullable(ctx, db, id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestInsertNullable_NilBody(t *testing.T) {
 func TestScanWithoutNullableFails(t *testing.T) {
 	db := setupTestDB_WithNull(t)
 	ctx := context.Background()
-	id, err := InsertNullable(ctx, "title_null", nil, db)
+	id, err := InsertNullable(ctx, db, "title_null", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
