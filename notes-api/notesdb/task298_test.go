@@ -11,15 +11,9 @@ func setupTestDb(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
+	ctx := context.Background()
 
-	_, err = db.Exec(`
-        CREATE TABLE notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            body TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `)
+	err = Migrate(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,6 +37,15 @@ func TestSearchNotes_Match(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if len(notes) != 2 {
+		t.Fatal("expected 2 values")
+	}
+	if notes[0].Title != "go basics" {
+		t.Fatal("expected go basic")
+	}
+	if notes[1].Title != "go advanced" {
+		t.Fatal("expected go advanced")
+	}
 	t.Log(notes)
 }
 
@@ -54,6 +57,9 @@ func TestSearchNotes_NoMatch(t *testing.T) {
 	notes, err := SearchNotes(ctx, db, pattern)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if len(notes) != 0 {
+		t.Fatal("expected len notes 0")
 	}
 	t.Log(notes)
 }

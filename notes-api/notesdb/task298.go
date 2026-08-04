@@ -25,5 +25,5 @@ func SearchNotes(ctx context.Context, db *sql.DB, pattern string) ([]Note, error
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
-	return notes, err
+	return notes, nil
 }
