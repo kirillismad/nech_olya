@@ -11,15 +11,8 @@ func setupTestDB_WithNull(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	_, err = db.Exec(`
-        CREATE TABLE notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            body TEXT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `)
+	ctx := context.Background()
+	err = Migrate(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
