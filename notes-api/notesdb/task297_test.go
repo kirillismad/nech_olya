@@ -22,8 +22,8 @@ func setupTestDB_WithNull(t *testing.T) *sql.DB {
 func TestInsertNullable_WithBody(t *testing.T) {
 	db := setupTestDB(t)
 	ctx := context.Background()
-	strPtr := "hello"
-	id, err := InsertNullable(ctx, db, "t", &strPtr)
+	str := "hello"
+	id, err := InsertNullable(ctx, db, "t", &str)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,6 @@ func TestInsertNullable_WithBody(t *testing.T) {
 		t.Fatal("expected value body hello")
 	}
 	t.Log(note)
-
 }
 
 func TestInsertNullable_NilBody(t *testing.T) {
