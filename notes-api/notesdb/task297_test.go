@@ -72,7 +72,7 @@ func TestScanWithoutNullableFails(t *testing.T) {
 	var str string
 	err = db.QueryRowContext(ctx, "SELECT body FROM notes WHERE id = ?", id).Scan(&str)
 	if err == nil {
-		t.Fatal(err)
+		t.Fatal("expected scan error for NULL into string")
 	}
 	t.Log(str)
 }
