@@ -46,11 +46,15 @@ func TestInsertNullable_NilBody(t *testing.T) {
 	ctx := context.Background()
 	var shear []int64
 	for i := 0; i < 3; i++ {
-		id, err := InsertNote(ctx, db, "title", "body")
+		id, err := InsertNullable(ctx, db, "t", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 		shear = append(shear, id)
+		note, err := GetNullable(ctx, db, id)
+		if note.Body.Valid != false {
+			t.Fatal("expected null body")
+		}
 	}
 	if len(shear) != 3 {
 		t.Fatal("incorrect length")
