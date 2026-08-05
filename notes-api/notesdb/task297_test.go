@@ -52,7 +52,7 @@ func TestInsertNullable_NilBody(t *testing.T) {
 		}
 		shear = append(shear, id)
 		note, err := GetNullable(ctx, db, id)
-		if note.Body.Valid != false {
+		if note.Body.Valid {
 			t.Fatal("expected null body")
 		}
 	}
