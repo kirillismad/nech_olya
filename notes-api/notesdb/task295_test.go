@@ -16,7 +16,7 @@ import (
 func TestSlowCount_DeadlineExceeded(t *testing.T) {
 	db, err := OpenInMemory()
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
