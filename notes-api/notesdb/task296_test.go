@@ -60,9 +60,16 @@ func TestTransfer_Success(t *testing.T) {
 func TestTransfer_InsufficientFunds(t *testing.T) {
 	db := helper2(t)
 	ctx := context.Background()
+	var startBalanceAlice int64
+	_ = db.QueryRowContext(ctx, `SELECT balance FROM accounts WHERE id = 1`).Scan(&startBalanceAlice)
 	err := Transfer(ctx, db, 1, 2, 9999)
 	if !errors.Is(err, ErrInsufficientFunds) {
 		t.Fatal(err)
+	}
+	var finalBalanceAlice int64
+	_ = db.QueryRowContext(ctx, `SELECT balance FROM accounts WHERE id = 1`).Scan(&finalBalanceAlice)
+	if startBalanceAlice != finalBalanceAlice {
+		t.Fatal("balance written off")
 	}
 }
 

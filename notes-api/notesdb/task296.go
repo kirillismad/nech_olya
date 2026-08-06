@@ -53,9 +53,18 @@ func Transfer(ctx context.Context, db *sql.DB, fromID, toID int64, amount int64)
 	}
 
 	query = `UPDATE accounts SET balance = balance + ? WHERE id=?`
-	_, err = tx.ExecContext(ctx, query, amount, toID)
+	result, err := tx.ExecContext(ctx, query, amount, toID)
 	if err != nil {
 		return fmt.Errorf("failed to credit balance: %w", err)
+	}
+
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed row affected: %w", err)
+	}
+
+	if rowAffected == 0 {
+		return ErrAccountNotFound
 	}
 
 	if err = tx.Commit(); err != nil {
