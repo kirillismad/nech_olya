@@ -52,7 +52,7 @@ func TestInsertNullable_NilBody(t *testing.T) {
 		}
 		shear = append(shear, id)
 		note, err := GetNullable(ctx, db, id)
-		if note.Body.Valid != false {
+		if note.Body.Valid {
 			t.Fatal("expected null body")
 		}
 	}
@@ -72,7 +72,7 @@ func TestScanWithoutNullableFails(t *testing.T) {
 	var str string
 	err = db.QueryRowContext(ctx, "SELECT body FROM notes WHERE id = ?", id).Scan(&str)
 	if err == nil {
-		t.Fatal(err)
+		t.Fatal("expected scan error for NULL into string")
 	}
 	t.Log(str)
 }
