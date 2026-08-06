@@ -3,7 +3,6 @@ package notesdb
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 	"time"
 )
@@ -29,22 +28,18 @@ func TestSlowCount_DeadlineExceeded(t *testing.T) {
 	}
 }
 
-func TestSlowCount_Cancelled(t *testing.T) {
+func TestSlowCount_CancelledV2(t *testing.T) {
 	db, err := OpenInMemory()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var wg sync.WaitGroup
 	errCh := make(chan error, 1)
-	wg.Add(1)
+	defer close(errCh)
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		defer wg.Done()
 		_, err := SlowCount(ctx, db)
-		if err != nil {
-			errCh <- err
-		}
+		errCh <- err
 	}()
 	time.Sleep(10 * time.Millisecond)
 	cancel()
