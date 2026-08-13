@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 )
 
 func newTestRepo(t *testing.T) *Repository {
@@ -13,10 +14,14 @@ func newTestRepo(t *testing.T) *Repository {
 	if err != nil {
 		t.Fatal(err)
 	}
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(30 * time.Minute)
 
 	t.Cleanup(func() {
 		db.Close()
 	})
+
 	repo := New(db)
 	ctx := context.Background()
 	err = repo.Migrate(ctx)
