@@ -8,7 +8,7 @@ import (
 func (r *Repository) BulkCreate(ctx context.Context, notes []Note) ([]int64, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed start transaction %w", err)
 	}
 	defer tx.Rollback()
 	ids := make([]int64, 0, len(notes))
@@ -23,12 +23,12 @@ func (r *Repository) BulkCreate(ctx context.Context, notes []Note) ([]int64, err
 		}
 		affected, err := result.LastInsertId()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed get id %w", err)
 		}
 		ids = append(ids, affected)
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("transaction rollback %w", err)
 	}
 	return ids, nil
 }

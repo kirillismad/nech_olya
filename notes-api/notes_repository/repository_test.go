@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"notes/notesdb"
 	"testing"
 )
 
@@ -20,7 +19,7 @@ func newTestRepo(t *testing.T) *Repository {
 	})
 	repo := New(db)
 	ctx := context.Background()
-	err = notesdb.Migrate(ctx, db)
+	err = repo.Migrate(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,12 +53,13 @@ func TestCreate_EmptyTitle(t *testing.T) {
 	}
 	ctx := context.Background()
 	_, err := repo.Create(ctx, note)
-	if err != nil {
-		if !errors.Is(err, ErrEmptyTitle) {
-			t.Fatal(err)
-		}
-		t.Log(err)
+	if !errors.Is(err, ErrEmptyTitle) {
+		t.Fatal(err)
 	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(err)
 }
 
 func TestGetByID_Found(t *testing.T) {
@@ -89,11 +89,11 @@ func TestGetByID_NotFound(t *testing.T) {
 		Body:  nil,
 	}
 	ctx := context.Background()
-	id, err := repo.Create(ctx, note)
+	_, err := repo.Create(ctx, note)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = repo.GetByID(ctx, id)
+	_, err = repo.GetByID(ctx, 999)
 	if err != nil {
 		if !errors.Is(err, ErrNotFound) {
 			t.Fatal(err)
@@ -149,7 +149,7 @@ func TestList_ReturnsAll(t *testing.T) {
 	t.Log(notes)
 }
 
-func TestUpdateOk(t *testing.T) {
+func TestUpdate_OK(t *testing.T) {
 	t.Parallel()
 	repo := newTestRepo(t)
 	note := Note{
@@ -187,7 +187,7 @@ func TestUpdate_NotFound(t *testing.T) {
 	ctx := context.Background()
 	err := repo.Update(ctx, 999, note)
 
-	if err!= nil {
+	if err != nil {
 		if !errors.Is(err, ErrNotFound) {
 			t.Fatal(err)
 		}
@@ -212,7 +212,7 @@ func TestDelete_Ok(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = repo.GetByID(ctx, id)
-	
+
 	if err != nil {
 		if !errors.Is(err, ErrNotFound) {
 			t.Fatal(err)

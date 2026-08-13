@@ -13,7 +13,7 @@ func (r *Repository) Delete(ctx context.Context, id int64) error {
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to retrieve the number of rows %w", err)
 	}
 	if affected == 0 {
 		return ErrNotFound

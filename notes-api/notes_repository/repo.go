@@ -12,7 +12,7 @@ type Repository struct {
 func New(db *sql.DB) *Repository {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(30 * time.Second)
+	db.SetConnMaxLifetime(30 * time.Minute)
 	repo := Repository{
 		db: db,
 	}

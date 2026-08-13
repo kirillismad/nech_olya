@@ -18,7 +18,7 @@ func (r *Repository) Update(ctx context.Context, id int64, note Note) error {
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("ailed to retrieve the number of rows %w",err)
 	}
 	if affected == 0 {
 		return ErrNotFound
