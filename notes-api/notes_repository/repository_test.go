@@ -6,6 +6,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
 func newTestRepo(t *testing.T) *Repository {
@@ -58,10 +60,10 @@ func TestCreate_EmptyTitle(t *testing.T) {
 	}
 	ctx := context.Background()
 	_, err := repo.Create(ctx, note)
-	if !errors.Is(err, ErrEmptyTitle) {
+	if err == nil {
 		t.Fatal(err)
 	}
-	if err != nil {
+	if !errors.Is(err, ErrEmptyTitle) {
 		t.Fatal(err)
 	}
 	t.Log(err)
@@ -99,12 +101,14 @@ func TestGetByID_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = repo.GetByID(ctx, 999)
-	if err != nil {
-		if !errors.Is(err, ErrNotFound) {
-			t.Fatal(err)
-		}
-		t.Log(err)
+	if err == nil {
+		t.Fatal(err)
 	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatal(err)
+	}
+	t.Log(err)
+
 }
 
 func TestList_Empty(t *testing.T) {
@@ -176,6 +180,9 @@ func TestUpdate_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 	note, err = repo.GetByID(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if note.ID != id || note.Title != note2.Title || *note.Body != *note2.Body {
 		t.Fatal("the record has not changed")
 	}
@@ -217,13 +224,15 @@ func TestDelete_Ok(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = repo.GetByID(ctx, id)
-
-	if err != nil {
-		if !errors.Is(err, ErrNotFound) {
-			t.Fatal(err)
-		}
-		t.Log("ok")
+	if err == nil {
+		t.Fatal(err)
 	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatal(err)
+	}
+
+	t.Log("ok")
+
 }
 
 func TestDelete_NotFound(t *testing.T) {
@@ -239,12 +248,14 @@ func TestDelete_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = repo.Delete(ctx, 999)
-	if err != nil {
-		if !errors.Is(err, ErrNotFound) {
-			t.Fatal(err)
-		}
-		t.Log("ok")
+	if err == nil {
+		t.Fatal(err)
 	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+
 }
 
 func TestBulkCreate_Success(t *testing.T) {
