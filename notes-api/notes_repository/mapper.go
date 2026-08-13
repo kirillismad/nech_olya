@@ -8,9 +8,9 @@ func entityToNote(entity NoteEntity) Note {
 	}
 
 	return Note{
-		entity.ID,
-		entity.Title,
-		body,
-		entity.CreatedAt,
+		ID:        entity.ID,
+		Title:     entity.Title,
+		Body:      body,
+		CreatedAt: entity.CreatedAt,
 	}
 }
