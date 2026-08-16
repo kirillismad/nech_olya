@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:8080
+
+###
+# @name health-check
+GET {{baseUrl}}/alive
+
+###
+# @name list-notes
+GET {{baseUrl}}/notes
+Content-Type: application/json
+
+
+###
+#  @name create-note
+POST {{baseUrl}}/notes
+Content-Type: application/json
+
+{
+  "title": "My Note",
+  "body": "This is the content of my note."
+}
+
+### 
+# @name get-note
+# @prompt noteId
+GET {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+
+
+### 
+# @name update-note
+# @prompt noteId
+PUT {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json
+
+{
+  "title": "My Note (updated)",
+  "body": "This is the updated content of my note."
+}
+
+
+### 
+# @name delete-note
+# @prompt noteId
+DELETE {{baseUrl}}/notes/{{noteId}}
+Content-Type: application/json

@@ -1,0 +1,55 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  DB_DSN: sqlite://bin/notes.db?x-no-tx-wrap=true
+
+tasks:
+  serve:
+    desc: Run the HTTP server
+    deps: [migrate-up-all]
+    cmds:
+      - go run main.go serve
+
+  gen-mocks:
+    desc: Generate mocks
+    cmds:
+      - go tool mockery
+
+  migrate-up-all:
+    desc: Run all database migrations
+    cmds:
+      - migrate -path migrations -database {{.DB_DSN}} up
+
+  migrate-up:
+    desc: Run database migrations
+    vars:
+      n: '{{.n | default "1"}}'
+    cmds:
+      - migrate -path migrations -database {{.DB_DSN}} up {{.n}}
+
+  migrate-down:
+    desc: Rollback database migrations
+    vars:
+      n: '{{.n | default "1"}}'
+    cmds:
+      - migrate -path migrations -database {{.DB_DSN}} down {{.n}}
+
+  migrate-new:
+    desc: Create a new migration file
+    requires:
+      vars: [name]
+    cmds:
+      - migrate create -ext sql -dir migrations {{.name}}
+
+  reset-db:
+    desc: Remove the database file and re-run all migrations
+    cmds:
+      - rm -f bin/notes.db
+      - task migrate-up-all
+      
+  tests:
+    desc: Run unit tests
+    cmds:
+      - go test -race -v ./...

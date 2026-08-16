@@ -1,0 +1,16 @@
+all: false
+recursive: false
+dir: tests/mocks/{{ trimPrefix "internal" .InterfaceDirRelative }}
+filename: '{{.InterfaceName | snakecase}}.go'
+force-file-write: true
+formatter: gofmt
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName | snakecase}}'
+template: testify
+
+packages:
+  notesv1/internal/apps/notes:
+    config:
+      recursive: true
+      all: true
