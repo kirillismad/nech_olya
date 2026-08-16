@@ -7,15 +7,16 @@
 ## Требования
 
 - Go `1.26.4` или совместимая версия, указанная в `go.mod`
-- [Task](https://taskfile.dev/)
-- CLI-утилита `migrate` с поддержкой драйвера SQLite
+- [Task](https://taskfile.dev/) (`brew install go-task/tap/go-task` на macOS)
 
 Зависимости Go, включая драйвер SQLite и Mockery, описаны в `go.mod`; для их
-установки выполните `go mod download`.
+установки выполните `go mod download`. CLI-утилиту `migrate` с поддержкой
+SQLite можно установить через Task:
 
 ```bash
 cd notesv1
 go mod download
+task install-migrate
 ```
 
 ## Настройка и запуск
@@ -225,6 +226,7 @@ CREATE TABLE notes (
 
 | Команда | Действие |
 | --- | --- |
+| `task install-migrate` | Установить CLI-утилиту `migrate` с драйвером SQLite |
 | `task migrate-up-all` | Применить все ожидающие миграции |
 | `task migrate-up n=1` | Применить `n` миграций; по умолчанию `1` |
 | `task migrate-down n=1` | Откатить `n` миграций; по умолчанию `1` |
@@ -265,6 +267,7 @@ task gen-mocks
 task serve                    # применить миграции и запустить сервис
 task tests                    # запустить все тесты с race detector
 task gen-mocks                # заново сгенерировать моки Mockery
+task install-migrate          # установить migrate с драйвером SQLite
 task migrate-up-all           # применить ожидающие миграции
 task migrate-up n=1           # применить выбранное число миграций
 task migrate-down n=1         # откатить выбранное число миграций

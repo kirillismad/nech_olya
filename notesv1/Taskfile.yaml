@@ -48,7 +48,12 @@ tasks:
     cmds:
       - rm -f bin/notes.db
       - task migrate-up-all
-      
+
+  install-migrate:
+    desc: Install the migrate CLI tool
+    cmds:
+      - go install -tags 'sqlite' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+  
   tests:
     desc: Run unit tests
     cmds:
