@@ -18,7 +18,7 @@ type UpdateNoteInput struct {
 func (in *UpdateNoteInput) Validate() error {
 	return validation.ValidateStruct(in,
 		validation.Field(&in.ID, validation.Required, validation.Min(1)),
-		validation.Field(&in.Title, validation.Required, validation.RuneLength(0, 256)),
+		validation.Field(&in.Title, validation.Required, validation.RuneLength(1, 256)),
 		validation.Field(&in.Body, validation.NilOrNotEmpty),
 	)
 }

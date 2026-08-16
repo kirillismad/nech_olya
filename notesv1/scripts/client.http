@@ -6,13 +6,13 @@ GET {{baseUrl}}/alive
 
 ###
 # @name list-notes
-GET {{baseUrl}}/notes
+GET {{baseUrl}}/notes/
 Content-Type: application/json
 
 
 ###
 #  @name create-note
-POST {{baseUrl}}/notes
+POST {{baseUrl}}/notes/
 Content-Type: application/json
 
 {

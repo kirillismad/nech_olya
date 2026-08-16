@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
+	"notesv1/internal/logger"
 	"strconv"
 	"time"
 )
@@ -17,16 +19,25 @@ type GetNoteResponse struct {
 }
 
 func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
+	log := logger.FromContext(r.Context())
+
 	id, err := noteID(r)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid note id")
 		return
 	}
 
-	result, err := h.usecases.GetNote(r.Context(), usecases.GetNoteInput{ID: id})
+	input := usecases.GetNoteInput{ID: id}
+
+	result, err := h.usecases.GetNote(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrNoteNotFound):
+			log.WarnContext(
+				r.Context(),
+				"note not found",
+				slog.Any("input", input),
+			)
 			writeError(w, http.StatusNotFound, "note not found")
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())

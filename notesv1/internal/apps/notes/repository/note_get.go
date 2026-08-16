@@ -39,17 +39,16 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 	}
 
 	return dto.GetNoteResult{Note: &models.Note{
-		ID:        note.ID,
-		Title:     note.Title,
-		Body:      noteBody(note.Body),
+		ID:    note.ID,
+		Title: note.Title,
+		Body: func() *string {
+			var body sql.NullString = note.Body
+			if !body.Valid {
+				return nil
+			}
+			return &body.String
+		}(),
 		CreatedAt: note.CreatedAt,
 		UpdatedAt: note.UpdatedAt,
 	}}, nil
-}
-
-func noteBody(body sql.NullString) *string {
-	if !body.Valid {
-		return nil
-	}
-	return &body.String
 }

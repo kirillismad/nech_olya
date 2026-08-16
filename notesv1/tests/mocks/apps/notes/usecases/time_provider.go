@@ -36,6 +36,57 @@ func (_m *MockTimeProvider) EXPECT() *MockTimeProvider_Expecter {
 	return &MockTimeProvider_Expecter{mock: &_m.Mock}
 }
 
+// Normalize provides a mock function for the type MockTimeProvider
+func (_mock *MockTimeProvider) Normalize(t time.Time) time.Time {
+	ret := _mock.Called(t)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Normalize")
+	}
+
+	var r0 time.Time
+	if returnFunc, ok := ret.Get(0).(func(time.Time) time.Time); ok {
+		r0 = returnFunc(t)
+	} else {
+		r0 = ret.Get(0).(time.Time)
+	}
+	return r0
+}
+
+// MockTimeProvider_Normalize_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Normalize'
+type MockTimeProvider_Normalize_Call struct {
+	*mock.Call
+}
+
+// Normalize is a helper method to define mock.On call
+//   - t time.Time
+func (_e *MockTimeProvider_Expecter) Normalize(t any) *MockTimeProvider_Normalize_Call {
+	return &MockTimeProvider_Normalize_Call{Call: _e.mock.On("Normalize", t)}
+}
+
+func (_c *MockTimeProvider_Normalize_Call) Run(run func(t time.Time)) *MockTimeProvider_Normalize_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 time.Time
+		if args[0] != nil {
+			arg0 = args[0].(time.Time)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockTimeProvider_Normalize_Call) Return(time1 time.Time) *MockTimeProvider_Normalize_Call {
+	_c.Call.Return(time1)
+	return _c
+}
+
+func (_c *MockTimeProvider_Normalize_Call) RunAndReturn(run func(t time.Time) time.Time) *MockTimeProvider_Normalize_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Now provides a mock function for the type MockTimeProvider
 func (_mock *MockTimeProvider) Now() time.Time {
 	ret := _mock.Called()

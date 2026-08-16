@@ -21,6 +21,7 @@ type TransactionManager interface {
 
 type TimeProvider interface {
 	Now() time.Time
+	Normalize(t time.Time) time.Time
 }
 
 type Usecases struct {

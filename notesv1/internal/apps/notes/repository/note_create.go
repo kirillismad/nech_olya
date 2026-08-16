@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"notesv1/internal/apps/notes/dto"
 	"notesv1/internal/entities"
@@ -22,7 +23,26 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 		entities.NotesCreatedAtColumn,
 		entities.NotesUpdatedAtColumn,
 	)
-	result, err := r.db.ExecContext(ctx, query, q.Title, q.Body, q.CreatedAt, q.UpdatedAt)
+	entity := entities.Note{
+		Title: q.Title,
+		Body: func() sql.NullString {
+			if q.Body == nil {
+				return sql.NullString{}
+			}
+			return sql.NullString{String: *q.Body, Valid: true}
+		}(),
+		CreatedAt: q.CreatedAt,
+		UpdatedAt: q.UpdatedAt,
+	}
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		entity.Title,
+		entity.Body,
+		entity.CreatedAt,
+		entity.UpdatedAt,
+	)
 	if err != nil {
 		return dto.CreateNoteResult{}, fmt.Errorf("failed to create note: %w", err)
 	}

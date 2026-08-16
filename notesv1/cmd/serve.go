@@ -5,9 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"notesv1/internal/apps/notes"
 	"notesv1/internal/config"
+	"notesv1/internal/logger"
+	"notesv1/internal/middlewares"
 	pkgconfig "notesv1/pkg/config"
 	"time"
 
@@ -34,6 +37,9 @@ var serveCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
+		log := logger.New()
+		slog.SetDefault(log)
+
 		cfg, err := pkgconfig.LoadConfig[config.Config]("NOTES_V1")
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -57,13 +63,27 @@ var serveCmd = &cobra.Command{
 		})
 		mux.Handle("/notes/", http.StripPrefix("/notes", notesPackage.ServeMux()))
 
+		middlewares := []middlewares.Middleware{
+			middlewares.NewLoggerMiddleware(log),
+			middlewares.NewRecoverMiddleware(),
+		}
+
+		var handler http.Handler = mux
+		for _, m := range middlewares {
+			handler = m(handler)
+		}
+
 		srv := &http.Server{
 			Addr:    fmt.Sprintf(":%d", cfg.HTTP.Port),
-			Handler: mux,
+			Handler: handler,
 		}
 
 		errCh := make(chan error, 1)
 		go func() {
+			slog.Info(
+				"starting server",
+				slog.String("addr", srv.Addr),
+			)
 			if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				errCh <- fmt.Errorf("failed to start server: %w", err)
 				return
@@ -75,6 +95,7 @@ var serveCmd = &cobra.Command{
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
+			slog.Info("shutting down server")
 			if err := srv.Shutdown(shutdownCtx); err != nil {
 				return err
 			}
