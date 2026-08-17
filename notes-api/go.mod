@@ -1,4 +1,4 @@
-module task255
+module notes
 
 go 1.26.1
 
