@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "notesv1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}/notesv1",
+            "program": "${workspaceFolder}/notesv1/main.go",
+            "args": [
+                "serve"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "envFile": "${workspaceFolder}/notesv1/.env"
+        }
+    ]
+}

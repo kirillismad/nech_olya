@@ -1,0 +1,11 @@
+{
+    "go.testFlags": [
+        "-v"
+    ],
+    "rest-client.environmentVariables": {
+        "$shared": {},
+        "local": {
+            "baseUrl": "http://localhost:8080"
+        }
+    }
+}
