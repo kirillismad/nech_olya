@@ -327,7 +327,7 @@ func TestContextCancellation(t *testing.T) {
 
 }
 
-func TestBulkCreateV1_Succes(t *testing.T){
+func TestBulkCreateV1_Succes(t *testing.T) {
 	t.Parallel()
 	repo := newTestRepo(t)
 	ctx := context.Background()
@@ -346,7 +346,7 @@ func TestBulkCreateV1_Succes(t *testing.T){
 	t.Log("ok")
 }
 
-func TestBulkCreateV1_AllOrNothing(t *testing.T){
+func TestBulkCreateV1_AllOrNothing(t *testing.T) {
 	t.Parallel()
 	repo := newTestRepo(t)
 	ctx := context.Background()
@@ -362,6 +362,18 @@ func TestBulkCreateV1_AllOrNothing(t *testing.T){
 	}
 	if len(notes2) != 0 {
 		t.Fatal("expected length 3")
+	}
+	t.Log("ok")
+}
+
+func TestBulkCreateV1_EmptyList(t *testing.T) {
+	t.Parallel()
+	repo := newTestRepo(t)
+	ctx := context.Background()
+	notes := []Note{}
+	err := repo.BulkCreateV1(ctx, notes)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log("ok")
 }

@@ -43,9 +43,13 @@ func (r *Repository) BulkCreate(ctx context.Context, notes []Note) ([]int64, err
 // Пример того как это делается можно посмотреть в файле notesdb/null_example_test.go, в функции TestNull.
 // Там показано как формируется SQL запрос для вставки нескольких строк сразу.
 func (r *Repository) BulkCreateV1(ctx context.Context, notes []Note) error {
+	if len(notes) == 0 {
+		return nil
+	}
+
 	bulkCreateQuery := `INSERT INTO notes(title,body) VALUES`
 	args := []any{}
-	for i, p := range notes {
+	for i, p := range notes { // len = 0
 		if p.Title == "" {
 			return ErrEmptyTitle
 		}
