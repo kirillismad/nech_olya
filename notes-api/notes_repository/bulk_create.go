@@ -59,16 +59,9 @@ func (r *Repository) BulkCreateV1(ctx context.Context, notes []Note) error {
 		bulkCreateQuery += `(?,?)`
 		args = append(args, p.Title, p.Body)
 	}
-	result, err := r.db.ExecContext(ctx, bulkCreateQuery, args...)
+	_, err := r.db.ExecContext(ctx, bulkCreateQuery, args...)
 	if err != nil {
 		return fmt.Errorf("failed to make the request DB %w", err)
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to retrieve the number of affected rows %w", err)
-	}
-	if rowsAffected == 0 {
-		return fmt.Errorf("the lines were not modified")
 	}
 	return nil
 }
