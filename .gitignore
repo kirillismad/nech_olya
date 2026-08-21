@@ -36,5 +36,6 @@ build/
 .DS_Store
 
 
-.github/agents/
+.github/*
+!.github/CODEOWNERS
 .codegraph/
