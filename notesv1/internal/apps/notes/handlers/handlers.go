@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
 )
@@ -27,7 +27,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		log.Printf("failed to encode json: %v", err)
+		slog.Error("failed to encode json", slog.Any("error", err))
 	}
 }
 
@@ -37,6 +37,6 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 
 	err := json.NewEncoder(w).Encode(map[string]string{"error": msg})
 	if err != nil {
-		log.Printf("failed to encode json: %v", err)
+		slog.Error("failed to encode json", slog.Any("error", err))
 	}
 }
