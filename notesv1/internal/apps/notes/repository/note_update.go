@@ -10,7 +10,7 @@ import (
 
 func (r repo) UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.UpdateNoteResult, error) {
 	query := fmt.Sprintf(
-		`UPDATE %s SET %s = ?, %s = ?, %s = ? WHERE %s = ?`,
+		"UPDATE %s SET %s = ?, %s = ?, %s = ? WHERE %s = ?",
 		entities.NotesTable,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -25,6 +25,7 @@ func (r repo) UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.Upda
 			if q.Body == nil {
 				return sql.NullString{}
 			}
+
 			return sql.NullString{String: *q.Body, Valid: true}
 		}(),
 		UpdatedAt: q.UpdatedAt,

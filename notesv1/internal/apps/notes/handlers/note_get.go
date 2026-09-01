@@ -24,6 +24,7 @@ func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
 	id, err := noteID(r)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid note id")
+
 		return
 	}
 
@@ -42,6 +43,7 @@ func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
+
 		return
 	}
 

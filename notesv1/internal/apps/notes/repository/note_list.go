@@ -10,15 +10,7 @@ import (
 
 func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNotesResult, error) {
 	query := fmt.Sprintf(
-		`
-		SELECT
-			%s,
-			%s,
-			%s,
-			%s,
-			%s
-		FROM %s
-	`,
+		"SELECT %s, %s, %s, %s, %s FROM %s",
 		entities.NotesIDColumn,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -31,9 +23,10 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
 	if err != nil {
 		return dto.ListNotesResult{}, fmt.Errorf("failed to list notes: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var entityList []entities.Note
+
 	for rows.Next() {
 		var item entities.Note
 		if err := rows.Scan(
@@ -45,30 +38,33 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
 		); err != nil {
 			return dto.ListNotesResult{}, fmt.Errorf("failed to scan note: %w", err)
 		}
+
 		entityList = append(entityList, item)
 	}
+
 	if err := rows.Err(); err != nil {
 		return dto.ListNotesResult{}, fmt.Errorf("rows error: %w", err)
 	}
 
 	modelList := make([]*models.Note, 0, len(entityList))
 	for _, item := range entityList {
-		modelList = append(modelList, &models.Note{
+		model := &models.Note{
 			ID:    item.ID,
 			Title: item.Title,
 			Body: func() *string {
 				if !item.Body.Valid {
 					return nil
 				}
+
 				return &item.Body.String
 			}(),
 			CreatedAt: item.CreatedAt,
 			UpdatedAt: item.UpdatedAt,
-		})
+		}
+		modelList = append(modelList, model)
 	}
 
 	return dto.ListNotesResult{
 		Items: modelList,
 	}, nil
-
 }

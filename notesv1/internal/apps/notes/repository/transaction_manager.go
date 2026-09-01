@@ -22,7 +22,7 @@ func (m *TransactionManager) WithTransaction(ctx context.Context, fn func(repo u
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() //nolint:errcheck
 
 	r := repo{
 		db: tx,

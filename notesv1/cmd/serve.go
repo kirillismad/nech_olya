@@ -49,6 +49,7 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("failed to open database: %w", err)
 		}
+
 		if err := db.PingContext(ctx); err != nil {
 			return fmt.Errorf("failed to ping database: %w", err)
 		}
@@ -79,13 +80,16 @@ var serveCmd = &cobra.Command{
 		}
 
 		errCh := make(chan error, 1)
+
 		go func() {
 			slog.Info(
 				"starting server",
 				slog.String("addr", srv.Addr),
 			)
+
 			if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				errCh <- fmt.Errorf("failed to start server: %w", err)
+
 				return
 			}
 		}()
@@ -96,9 +100,11 @@ var serveCmd = &cobra.Command{
 			defer cancel()
 
 			slog.Info("shutting down server")
+
 			if err := srv.Shutdown(shutdownCtx); err != nil {
 				return err
 			}
+
 			return nil
 		case err := <-errCh:
 			return err

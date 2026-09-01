@@ -1,0 +1,28 @@
+version: '2'
+
+linters:
+  default: standard
+  enable:
+  - bodyclose
+  - contextcheck
+  - gocritic
+  - noctx
+  - rowserrcheck
+  - sqlclosecheck
+  - misspell
+  - modernize
+  - nilnil
+  - nilerr
+  - nlreturn
+  - nolintlint
+  - sloglint
+  - testifylint
+  - thelper
+  - unparam
+  - whitespace
+  - wsl_v5
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports

@@ -24,6 +24,7 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 

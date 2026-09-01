@@ -16,15 +16,18 @@ type UpdateNoteRequest struct {
 
 func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
+
 	id, err := noteID(r)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid note id")
+
 		return
 	}
 
 	var req UpdateNoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
+
 		return
 	}
 
@@ -33,6 +36,7 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		Title: req.Title,
 		Body:  req.Body,
 	}
+
 	_, err = h.usecases.UpdateNote(r.Context(), input)
 	if err != nil {
 		switch {
@@ -46,6 +50,7 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
+
 		return
 	}
 

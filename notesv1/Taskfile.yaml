@@ -58,3 +58,13 @@ tasks:
     desc: Run unit tests
     cmds:
       - go test -race -v ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run --fix ./...
+
+  install-lint:
+    desc: Install golangci-lint
+    cmds: 
+      - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.2

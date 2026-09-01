@@ -24,6 +24,7 @@ func New(args *NewArgs) *Handlers {
 func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		log.Printf("failed to encode json: %v", err)
@@ -33,6 +34,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 func writeError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	err := json.NewEncoder(w).Encode(map[string]string{"error": msg})
 	if err != nil {
 		log.Printf("failed to encode json: %v", err)

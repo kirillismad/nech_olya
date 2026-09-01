@@ -7,8 +7,7 @@ import (
 	"notesv1/internal/apps/notes/models"
 )
 
-type ListNotesInput struct {
-}
+type ListNotesInput struct{}
 
 type ListNotesOutput struct {
 	Items []*models.Note

@@ -9,7 +9,7 @@ import (
 
 func (r repo) DeleteNote(ctx context.Context, q dto.DeleteNoteCommand) (dto.DeleteNoteResult, error) {
 	query := fmt.Sprintf(
-		`DELETE FROM %s WHERE %s = ?`,
+		"DELETE FROM %s WHERE %s = ?",
 		entities.NotesTable,
 		entities.NotesIDColumn,
 	)

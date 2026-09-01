@@ -16,6 +16,8 @@ type deps struct {
 }
 
 func newDeps(t *testing.T) *deps {
+	t.Helper()
+
 	repo := mock_usecases.NewMockRepository(t)
 	tm := mock_usecases.NewMockTransactionManager(t)
 

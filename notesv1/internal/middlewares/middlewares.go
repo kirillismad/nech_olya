@@ -40,7 +40,7 @@ func NewLoggerMiddleware(log *slog.Logger) Middleware {
 
 			l.Info("handled request",
 				slog.Int("status", rr.StatusCode),
-				slog.Duration("duration", time.Since(start)),
+				slog.String("duration", time.Since(start).String()),
 			)
 		})
 	}
@@ -57,9 +57,10 @@ func NewRecoverMiddleware() Middleware {
 					)
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(`{"error": "Internal Server Error"}`))
+					_, _ = w.Write([]byte(`{"error": "Internal Server Error"}`))
 				}
 			}()
+
 			next.ServeHTTP(w, r)
 		})
 	}

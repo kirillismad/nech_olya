@@ -13,7 +13,7 @@ import (
 
 func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResult, error) {
 	query := fmt.Sprintf(
-		`SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = ?`,
+		"SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = ?",
 		entities.NotesIDColumn,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -24,6 +24,7 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 	)
 
 	var note entities.Note
+
 	err := r.db.QueryRowContext(ctx, query, q.ID).Scan(
 		&note.ID,
 		&note.Title,
@@ -35,20 +36,23 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 		if errors.Is(err, sql.ErrNoRows) {
 			return dto.GetNoteResult{}, errors.Join(usecases.ErrNoteNotFound, sql.ErrNoRows)
 		}
+
 		return dto.GetNoteResult{}, fmt.Errorf("failed to get note: %w", err)
 	}
 
-	return dto.GetNoteResult{Note: &models.Note{
+	model := &models.Note{
 		ID:    note.ID,
 		Title: note.Title,
 		Body: func() *string {
-			var body sql.NullString = note.Body
-			if !body.Valid {
+			if !note.Body.Valid {
 				return nil
 			}
-			return &body.String
+
+			return &note.Body.String
 		}(),
 		CreatedAt: note.CreatedAt,
 		UpdatedAt: note.UpdatedAt,
-	}}, nil
+	}
+
+	return dto.GetNoteResult{Note: model}, nil
 }

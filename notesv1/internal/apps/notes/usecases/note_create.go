@@ -43,5 +43,6 @@ func (u *Usecases) CreateNote(ctx context.Context, input CreateNoteInput) (Creat
 	if err != nil {
 		return CreateNoteOutput{}, fmt.Errorf("failed to create note: %w", err)
 	}
+
 	return CreateNoteOutput{ID: result.ID}, nil
 }

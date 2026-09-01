@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"notesv1/cmd"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"notesv1/cmd"
 
 	"github.com/spf13/cobra"
 )
@@ -14,5 +13,6 @@ import (
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
+
 	cobra.CheckErr(cmd.RootCmd.ExecuteContext(ctx))
 }

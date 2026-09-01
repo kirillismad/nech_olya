@@ -10,13 +10,7 @@ import (
 
 func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.CreateNoteResult, error) {
 	query := fmt.Sprintf(
-		`INSERT INTO %s 
-		(
-			%s,
-			%s,
-			%s,
-			%s
-		) VALUES (?, ?, ?, ?)`,
+		"INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?)",
 		entities.NotesTable,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -29,6 +23,7 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 			if q.Body == nil {
 				return sql.NullString{}
 			}
+
 			return sql.NullString{String: *q.Body, Valid: true}
 		}(),
 		CreatedAt: q.CreatedAt,
