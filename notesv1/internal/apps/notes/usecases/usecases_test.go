@@ -21,6 +21,7 @@ func newDeps(t *testing.T) *deps {
 	repo := mock_usecases.NewMockRepository(t)
 	tm := mock_usecases.NewMockTransactionManager(t)
 
+	// При вызове GetRepository на TransactionManager должен возвращаться мок репозитория (repo). Количество вызовов может быть любым.
 	tm.EXPECT().GetRepository().Return(repo).Maybe()
 	tm.EXPECT().WithTransaction(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, fn func(r usecases.Repository) error) error {
 		return fn(repo)
