@@ -70,7 +70,7 @@ var serveCmd = &cobra.Command{
 		}
 
 		var handler http.Handler = mux
-		for _, m := range middlewares {
+			for _, m := range middlewares {
 			handler = m(handler)
 		}
 

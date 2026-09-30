@@ -68,3 +68,14 @@ tasks:
     desc: Install golangci-lint
     cmds: 
       - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.2
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  health-check:
+    desc: Check that the HTTP service is up on localhost:8080
+    cmds:
+      - curl -sf http://localhost:8080/alive
+
