@@ -3,6 +3,7 @@ package usecases_test
 import (
 	"errors"
 	"notesv1/internal/apps/notes/dto"
+	"notesv1/internal/apps/notes/models"
 	"notesv1/internal/apps/notes/usecases"
 	"strings"
 	"testing"
@@ -28,7 +29,7 @@ func TestUpdateNote(t *testing.T) {
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().GetNote(ctx, dto.GetNoteQuery{ID: inputID}).Return(dto.GetNoteResult{
-			Note: &dto.Note{ID: inputID},
+			Note: &models.Note{ID: inputID},
 		}, nil)
 		deps.repo.EXPECT().UpdateNote(ctx, dto.UpdateNoteCommand{
 			ID:        inputID,
@@ -56,7 +57,7 @@ func TestUpdateNote(t *testing.T) {
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().GetNote(ctx, dto.GetNoteQuery{ID: 42}).Return(dto.GetNoteResult{
-			Note: &dto.Note{ID: 42},
+			Note: &models.Note{ID: 42},
 		}, nil)
 		deps.repo.EXPECT().UpdateNote(ctx, dto.UpdateNoteCommand{
 			ID:        42,
@@ -81,7 +82,7 @@ func TestUpdateNote(t *testing.T) {
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().GetNote(ctx, dto.GetNoteQuery{ID: 42}).Return(dto.GetNoteResult{
-			Note: &dto.Note{ID: 42},
+			Note: &models.Note{ID: 42},
 		}, nil)
 		deps.repo.EXPECT().UpdateNote(ctx, dto.UpdateNoteCommand{
 			ID:        42,
@@ -159,7 +160,7 @@ func TestUpdateNote(t *testing.T) {
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().GetNote(ctx, dto.GetNoteQuery{ID: 42}).Return(dto.GetNoteResult{
-			Note: &dto.Note{ID: 42},
+			Note: &models.Note{ID: 42},
 		}, nil)
 		deps.repo.EXPECT().UpdateNote(ctx, dto.UpdateNoteCommand{ID: 42, Title: "title1", UpdatedAt: now}).
 			Return(dto.UpdateNoteResult{}, usecases.ErrNoteNotFound)
@@ -179,7 +180,7 @@ func TestUpdateNote(t *testing.T) {
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().GetNote(ctx, dto.GetNoteQuery{ID: 42}).Return(dto.GetNoteResult{
-			Note: &dto.Note{ID: 42},
+			Note: &models.Note{ID: 42},
 		}, nil)
 		deps.repo.EXPECT().UpdateNote(ctx, dto.UpdateNoteCommand{ID: 42, Title: "title1", UpdatedAt: now}).
 			Return(dto.UpdateNoteResult{}, repositoryErr)
