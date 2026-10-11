@@ -1,0 +1,19 @@
+services:
+  notesv1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    env_file:
+      - docker.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null "http://127.0.0.1:$$NOTES_V1_HTTP_PORT/alive"']
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    stop_grace_period: 10s
