@@ -44,3 +44,9 @@ Content-Type: application/json
 # @prompt noteId
 DELETE {{baseUrl}}/notes/{{noteId}}
 Content-Type: application/json
+
+
+
+###
+#@name count-notes
+GET {{baseUrl}}/notes/count

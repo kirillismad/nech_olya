@@ -12,6 +12,7 @@ type Repository interface {
 	GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResult, error)
 	UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.UpdateNoteResult, error)
 	DeleteNote(ctx context.Context, q dto.DeleteNoteCommand) (dto.DeleteNoteResult, error)
+	NoteCount(ctx context.Context) (dto.CountNotesResult, error)
 }
 
 type TransactionManager interface {
