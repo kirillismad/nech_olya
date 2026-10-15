@@ -1,10 +1,5 @@
-BEGIN
-;
+BEGIN;
 
+DROP TABLE "notes";
 
-DROP TABLE "notes"
-;
-
-
-COMMIT
-;
+COMMIT;

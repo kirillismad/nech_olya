@@ -1,14 +1,11 @@
-BEGIN
-;
+BEGIN;
 
 CREATE TABLE "notes" (
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "title" TEXT NOT NULL,
     "body" TEXT,
-    "created_at" DATETIME NOT NULL,
-    "updated_at" DATETIME NOT NULL
-)
-;
+    "created_at" TIMESTAMPTZ NOT NULL,
+    "updated_at" TIMESTAMPTZ NOT NULL
+);
 
-COMMIT
-;
+COMMIT;
