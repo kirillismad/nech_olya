@@ -32,6 +32,7 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 	}
 
 	var id int64
+
 	err := r.db.QueryRowContext(
 		ctx,
 		query,
@@ -43,5 +44,6 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 	if err != nil {
 		return dto.CreateNoteResult{}, fmt.Errorf("failed to create note: %w", err)
 	}
+
 	return dto.CreateNoteResult{ID: id}, nil
 }
