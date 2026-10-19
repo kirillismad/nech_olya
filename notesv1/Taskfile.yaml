@@ -3,14 +3,46 @@ version: '3'
 dotenv: ['.env']
 
 vars:
-  DB_DSN: sqlite://bin/notes.db?x-no-tx-wrap=true
+  MIGRATION_DB_DSN: postgres://postgres@localhost:5432/postgres?sslmode=disable
+  DOCKER_COMPOSE_FILE: docker/docker-compose.yaml
 
 tasks:
+  up-db:
+    desc: Start PostgreSQL and wait until it is healthy
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d --wait postgres
+
+  down:
+    desc: Stop the Compose stack and delete its volumes and database data
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} down -v --remove-orphans
+
+  logs:
+    desc: Show logs from the Compose stack
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} logs
+
+  ps:
+    desc: Show the status of the Compose stack
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} ps
+
+  stop:
+    desc: Stop the Compose stack without removing volumes
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} stop
+
   serve:
     desc: Run the HTTP server
     deps: [migrate-up-all]
     cmds:
       - go run main.go serve
+
+  serve-in-docker:
+    desc: Apply migrations and start the service in Docker
+    deps: [migrate-up-all]
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} -f docker/docker-compose.service.yaml up --build notesv1
 
   gen-mocks:
     desc: Generate mocks
@@ -19,22 +51,23 @@ tasks:
 
   migrate-up-all:
     desc: Run all database migrations
+    deps: [up-db]
     cmds:
-      - migrate -path migrations -database {{.DB_DSN}} up
+      - migrate -path migrations -database {{.MIGRATION_DB_DSN}} up
 
   migrate-up:
     desc: Run database migrations
     vars:
       n: '{{.n | default "1"}}'
     cmds:
-      - migrate -path migrations -database {{.DB_DSN}} up {{.n}}
+      - migrate -path migrations -database {{.MIGRATION_DB_DSN}} up {{.n}}
 
   migrate-down:
     desc: Rollback database migrations
     vars:
       n: '{{.n | default "1"}}'
     cmds:
-      - migrate -path migrations -database {{.DB_DSN}} down {{.n}}
+      - migrate -path migrations -database {{.MIGRATION_DB_DSN}} down {{.n}}
 
   migrate-new:
     desc: Create a new migration file
@@ -43,16 +76,10 @@ tasks:
     cmds:
       - migrate create -ext sql -dir migrations {{.name}}
 
-  reset-db:
-    desc: Remove the database file and re-run all migrations
-    cmds:
-      - rm -f bin/notes.db
-      - task migrate-up-all
-
   install-migrate:
     desc: Install the migrate CLI tool
     cmds:
-      - go install -tags 'sqlite' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      - go install -tags 'sqlite postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
   tests:
     desc: Run unit tests
@@ -66,7 +93,7 @@ tasks:
 
   install-lint:
     desc: Install golangci-lint
-    cmds: 
+    cmds:
       - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.2
 
   vet:

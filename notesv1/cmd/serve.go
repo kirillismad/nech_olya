@@ -14,6 +14,7 @@ import (
 	pkgconfig "notesv1/pkg/config"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/spf13/cobra"
 	_ "modernc.org/sqlite"
 )
@@ -22,8 +23,17 @@ func init() {
 	RootCmd.AddCommand(serveCmd)
 }
 
-func OpenDB(cfg *config.Config) (*sql.DB, error) {
+func OpenDBSQLite(cfg *config.Config) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", cfg.DB.DSN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	return db, nil
+}
+
+func OpenDBPGXv5(cfg *config.Config) (*sql.DB, error) {
+	db, err := sql.Open("pgx", cfg.DB.DSN)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -45,7 +55,7 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 
-		db, err := OpenDB(cfg)
+		db, err := OpenDBPGXv5(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to open database: %w", err)
 		}

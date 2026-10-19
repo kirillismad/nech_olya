@@ -10,12 +10,13 @@ import (
 
 func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.CreateNoteResult, error) {
 	query := fmt.Sprintf(
-		"INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?)",
+		"INSERT INTO %s (%s, %s, %s, %s) VALUES ($1, $2, $3, $4) RETURNING %s",
 		entities.NotesTable,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
 		entities.NotesCreatedAtColumn,
 		entities.NotesUpdatedAtColumn,
+		entities.NotesIDColumn,
 	)
 	entity := entities.Note{
 		Title: q.Title,
@@ -30,22 +31,17 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 		UpdatedAt: q.UpdatedAt,
 	}
 
-	result, err := r.db.ExecContext(
+	var id int64
+	err := r.db.QueryRowContext(
 		ctx,
 		query,
 		entity.Title,
 		entity.Body,
 		entity.CreatedAt,
 		entity.UpdatedAt,
-	)
+	).Scan(&id)
 	if err != nil {
 		return dto.CreateNoteResult{}, fmt.Errorf("failed to create note: %w", err)
 	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return dto.CreateNoteResult{}, fmt.Errorf("failed to get created note id: %w", err)
-	}
-
 	return dto.CreateNoteResult{ID: id}, nil
 }

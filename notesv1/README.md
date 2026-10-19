@@ -49,6 +49,70 @@ export NOTES_V1_DB_DSN='bin/notes.db'
 go run main.go serve
 ```
 
+## Docker
+
+Для запуска нужны Docker и Docker Compose. Все команды выполняются из
+каталога `notesv1/`; для миграций нужна CLI-утилита `migrate`
+(`task install-migrate`). БД описана в `docker/docker-compose.yaml`, а сервис — в
+`docker/docker-compose.service.yaml`. Для запуска сервиса используются оба файла.
+
+Запуск только PostgreSQL 17 и применение миграций:
+
+```bash
+task up-db
+task migrate-up-all
+```
+
+`task up-db` запускает БД в фоне и ждёт успешного health-check.
+`task migrate-up-all` также запускает БД через зависимость `up-db` и использует
+DSN `postgres://postgres@localhost:5432/postgres?sslmode=disable`.
+PostgreSQL настроен с аутентификацией `trust`: пароль не требуется.
+Порт `5432` опубликован на всех интерфейсах хоста, поэтому эта конфигурация
+предназначена только для изолированного окружения разработки. Данные хранятся
+в именованном томе `postgres-data`, смонтированном в `/var/lib/postgresql/data`.
+
+Сборка и запуск контейнера HTTP-сервиса:
+
+```bash
+task serve-in-docker
+```
+
+Сервис доступен на `http://localhost:8080`. Образ запускает `notes serve` от
+UID/GID `10001`. Контейнер загружает `docker/docker.env`, где БД доступна по
+имени `postgres` в общей сети Compose. Локальный `.env` используется Task для
+запуска на хосте и не передаётся контейнеру. Сам образ не применяет миграции:
+`serve-in-docker` сначала выполняет `migrate-up-all`, затем собирает сервис и
+запускает его в переднем плане с выводом логов.
+
+Управление контейнером БД через Task:
+
+```bash
+task ps
+task logs
+task stop
+```
+
+Эти задачи используют только `docker/docker-compose.yaml`: `ps` и `logs`
+показывают БД, а `stop` останавливает только БД без удаления контейнера и тома.
+Для просмотра состояния, логов и остановки обоих сервисов:
+
+```bash
+docker compose -f docker/docker-compose.yaml -f docker/docker-compose.service.yaml ps
+docker compose -f docker/docker-compose.yaml -f docker/docker-compose.service.yaml logs
+docker compose -f docker/docker-compose.yaml -f docker/docker-compose.service.yaml stop
+```
+
+Остановка HTTP-сервиса отправляет SIGTERM для корректного завершения.
+Для удаления стека и данных:
+
+```bash
+task down
+```
+
+**Внимание:** `task down` выполняет `down -v --remove-orphans`: удаляет
+контейнер БД, том с данными и осиротевшие контейнеры того же проекта Compose,
+включая `notesv1`, который не описан в основном Compose-файле.
+
 ## HTTP API
 
 Все маршруты заметок имеют префикс `/notes`. В каталоге `scripts` находится
