@@ -2,15 +2,19 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 )
 
-func (u *Usecases) NoteCount(ctx context.Context) (int64, error) {
+type NoteCountOutput struct {
+	Count int64
+}
+
+func (u *Usecases) NoteCount(ctx context.Context) (NoteCountOutput, error) {
 	repo := u.transactionManager.GetRepository()
 
 	result, err := repo.NoteCount(ctx)
 	if err != nil {
-		return 0, err
+		return NoteCountOutput{}, fmt.Errorf("get note count: %w", err)
 	}
-
-	return result.Count, nil
+	return NoteCountOutput{Count: result.Count}, nil
 }

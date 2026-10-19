@@ -11,12 +11,12 @@ import (
 func TestNoteCount(t *testing.T) {
 	t.Parallel()
 
-	r := require.New(t)
-	deps := newDeps(t)
-	ctx := newCtx()
-
 	t.Run("tc1: ok, returns note count", func(t *testing.T) {
 		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
 
 		expectedCount := int64(42)
 		deps.repo.EXPECT().NoteCount(ctx).Return(dto.CountNotesResult{Count: expectedCount}, nil)
@@ -28,6 +28,10 @@ func TestNoteCount(t *testing.T) {
 
 	t.Run("tc2: error, returns error", func(t *testing.T) {
 		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
 
 		repositoryErr := errors.New("repository error")
 		deps.repo.EXPECT().NoteCount(ctx).Return(dto.CountNotesResult{}, repositoryErr)
