@@ -95,3 +95,5 @@ tasks:
     desc: Install golangci-lint
     cmds:
       - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.13.2
+
+

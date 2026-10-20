@@ -29,6 +29,7 @@ func (p *Package) ServeMux() *http.ServeMux {
 	mux.HandleFunc("GET /{id}", handlers.GetNote)
 	mux.HandleFunc("PUT /{id}", handlers.UpdateNote)
 	mux.HandleFunc("DELETE /{id}", handlers.DeleteNote)
+	mux.HandleFunc("GET /count", handlers.CountNotes)
 
 	return mux
 }

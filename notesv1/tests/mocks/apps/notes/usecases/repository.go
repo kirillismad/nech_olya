@@ -301,6 +301,66 @@ func (_c *MockRepository_ListNotes_Call) RunAndReturn(run func(ctx context.Conte
 	return _c
 }
 
+// NoteCount provides a mock function for the type MockRepository
+func (_mock *MockRepository) NoteCount(ctx context.Context) (dto.CountNotesResult, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NoteCount")
+	}
+
+	var r0 dto.CountNotesResult
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (dto.CountNotesResult, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) dto.CountNotesResult); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(dto.CountNotesResult)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockRepository_NoteCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NoteCount'
+type MockRepository_NoteCount_Call struct {
+	*mock.Call
+}
+
+// NoteCount is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockRepository_Expecter) NoteCount(ctx any) *MockRepository_NoteCount_Call {
+	return &MockRepository_NoteCount_Call{Call: _e.mock.On("NoteCount", ctx)}
+}
+
+func (_c *MockRepository_NoteCount_Call) Run(run func(ctx context.Context)) *MockRepository_NoteCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockRepository_NoteCount_Call) Return(countNotesResult dto.CountNotesResult, err error) *MockRepository_NoteCount_Call {
+	_c.Call.Return(countNotesResult, err)
+	return _c
+}
+
+func (_c *MockRepository_NoteCount_Call) RunAndReturn(run func(ctx context.Context) (dto.CountNotesResult, error)) *MockRepository_NoteCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateNote provides a mock function for the type MockRepository
 func (_mock *MockRepository) UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.UpdateNoteResult, error) {
 	ret := _mock.Called(ctx, q)
