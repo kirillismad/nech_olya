@@ -33,14 +33,14 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		offsetStr = "0"
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid limit")
 
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseInt(offsetStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid offset")
 

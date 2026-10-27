@@ -8,8 +8,8 @@ import (
 )
 
 type ListNotesInput struct {
-	Limit  int
-	Offset int
+	Limit  int64
+	Offset int64
 }
 
 type ListNotesOutput struct {
@@ -19,7 +19,7 @@ type ListNotesOutput struct {
 func (u *Usecases) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
 	repo := u.transactionManager.GetRepository()
 
-	if input.Limit < 0 || input.Limit > 100 {
+	if input.Limit < 1 || input.Limit > 100 {
 		return ListNotesOutput{}, ErrInvalidLimit
 	}
 
