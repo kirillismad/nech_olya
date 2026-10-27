@@ -12,20 +12,27 @@ type ListNotesInput struct {
 	Offset int64
 }
 
+func(input ListNotesInput) Validate() error {
+if input.Limit < 1 || input.Limit > 100 {
+		return ErrValidation
+	}
+
+	if input.Offset < 0 {
+		return ErrValidation
+	}
+
+	return nil
+}
+
 type ListNotesOutput struct {
 	Items []*models.Note
 }
 
 func (u *Usecases) ListNotes(ctx context.Context, input ListNotesInput) (ListNotesOutput, error) {
+	if err := input.Validate(); err != nil {
+		return ListNotesOutput{}, err
+	}
 	repo := u.transactionManager.GetRepository()
-
-	if input.Limit < 1 || input.Limit > 100 {
-		return ListNotesOutput{}, ErrInvalidLimit
-	}
-
-	if input.Offset < 0 {
-		return ListNotesOutput{}, ErrInvalidOffset
-	}
 
 	listNotesResult, err := repo.ListNotes(ctx, dto.ListNotesQuery{Limit: input.Limit, Offset: input.Offset})
 	if err != nil {

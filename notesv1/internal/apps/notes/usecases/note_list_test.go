@@ -71,7 +71,7 @@ func TestListNotes(t *testing.T) {
 		ctx := newCtx()
 
 		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: -1})
-		require.ErrorIs(t, err, usecases.ErrInvalidLimit)
+		require.ErrorIs(t, err, usecases.ErrValidation)
 		require.Zero(t, output)
 	})
 
@@ -82,7 +82,7 @@ func TestListNotes(t *testing.T) {
 		ctx := newCtx()
 
 		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Offset: -1})
-		require.ErrorIs(t, err, usecases.ErrInvalidOffset)
+		require.ErrorIs(t, err, usecases.ErrValidation)
 		require.Zero(t, output)
 	})
 

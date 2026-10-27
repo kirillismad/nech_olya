@@ -50,10 +50,8 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset})
 	if err != nil {
 		switch {
-		case errors.Is(err, usecases.ErrInvalidLimit):
-			writeError(w, http.StatusBadRequest, "invalid limit")
-		case errors.Is(err, usecases.ErrInvalidOffset):
-			writeError(w, http.StatusBadRequest, "invalid offset")
+		case errors.Is(err, usecases.ErrValidation):
+			writeError(w, http.StatusBadRequest, "invalid validation")
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
