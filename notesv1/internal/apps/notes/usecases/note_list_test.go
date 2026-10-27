@@ -26,10 +26,10 @@ func TestListNotes(t *testing.T) {
 			{ID: 2, Title: "title2", CreatedAt: time.Now()},
 		}
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{}).
+		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1}).
 			Return(dto.ListNotesResult{Items: items}, nil).Times(1)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1})
 		r.NoError(err)
 		r.Equal(items, output.Items)
 	})
@@ -41,10 +41,10 @@ func TestListNotes(t *testing.T) {
 		deps := newDeps(t)
 		ctx := newCtx()
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{}).
-			Return(dto.ListNotesResult{}, nil).Times(1)
+		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1}).
+			Return(dto.ListNotesResult{Items: []*models.Note{}}, nil).Times(1)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1})
 		r.NoError(err)
 		r.Empty(output.Items)
 	})
@@ -62,5 +62,58 @@ func TestListNotes(t *testing.T) {
 		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
 		require.ErrorIs(t, err, repositoryErr)
 		require.Zero(t, output)
+	})
+
+	t.Run("tc4: error, invalid limit", func(t *testing.T) {
+		t.Parallel()
+
+		deps := newDeps(t)
+		ctx := newCtx()
+
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: -1})
+		require.ErrorIs(t, err, usecases.ErrInvalidLimit)
+		require.Zero(t, output)
+	})
+
+	t.Run("tc5: error, invalid offset", func(t *testing.T) {
+		t.Parallel()
+
+		deps := newDeps(t)
+		ctx := newCtx()
+
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Offset: -1})
+		require.ErrorIs(t, err, usecases.ErrInvalidOffset)
+		require.Zero(t, output)
+	})
+
+	t.Run("tc6: ok, limit offset pagination", func(t *testing.T) {
+		t.Parallel()
+
+		deps := newDeps(t)
+		ctx := newCtx()
+
+		expected := dto.ListNotesQuery{
+			Limit:  2,
+			Offset: 1,
+		}
+
+		deps.repo.EXPECT().
+			ListNotes(ctx, expected).
+			Return(dto.ListNotesResult{
+				Items: []*models.Note{
+					{ID: 2, Title: "n2"},
+					{ID: 3, Title: "n3"},
+				},
+			}, nil)
+
+		out, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:  2,
+			Offset: 1,
+		})
+
+		require.NoError(t, err)
+		require.Len(t, out.Items, 2)
+		require.Equal(t, int64(2), out.Items[0].ID)
+		require.Equal(t, int64(3), out.Items[1].ID)
 	})
 }

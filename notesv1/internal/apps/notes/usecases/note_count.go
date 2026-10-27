@@ -16,5 +16,6 @@ func (u *Usecases) NoteCount(ctx context.Context) (NoteCountOutput, error) {
 	if err != nil {
 		return NoteCountOutput{}, fmt.Errorf("get note count: %w", err)
 	}
+
 	return NoteCountOutput{Count: result.Count}, nil
 }

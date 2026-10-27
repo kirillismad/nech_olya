@@ -10,7 +10,7 @@ import (
 
 func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNotesResult, error) {
 	query := fmt.Sprintf(
-		"SELECT %s, %s, %s, %s, %s FROM %s",
+		"SELECT %s, %s, %s, %s, %s FROM %s ORDER BY id LIMIT $1 OFFSET $2",
 		entities.NotesIDColumn,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -19,7 +19,7 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
 		entities.NotesTable,
 	)
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, q.Limit, q.Offset)
 	if err != nil {
 		return dto.ListNotesResult{}, fmt.Errorf("failed to list notes: %w", err)
 	}

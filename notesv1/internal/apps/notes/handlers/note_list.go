@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
+	"strconv"
 	"time"
 )
 
@@ -21,9 +23,40 @@ type ListNotesResponse struct {
 func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{})
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "20"
+	}
+
+	offsetStr := r.URL.Query().Get("offset")
+	if offsetStr == "" {
+		offsetStr = "0"
+	}
+
+	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid limit")
+
+		return
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid offset")
+
+		return
+	}
+
+	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset})
+	if err != nil {
+		switch {
+		case errors.Is(err, usecases.ErrInvalidLimit):
+			writeError(w, http.StatusBadRequest, "invalid limit")
+		case errors.Is(err, usecases.ErrInvalidOffset):
+			writeError(w, http.StatusBadRequest, "invalid offset")
+		default:
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
 
 		return
 	}
