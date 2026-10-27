@@ -12,6 +12,7 @@ func (h *Handlers) CountNotes(w http.ResponseWriter, r *http.Request) {
 	result, err := h.usecases.NoteCount(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
+
 		return
 	}
 
