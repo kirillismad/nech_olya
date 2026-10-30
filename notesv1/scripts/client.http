@@ -9,6 +9,13 @@ GET {{baseUrl}}/alive
 GET {{baseUrl}}/notes/
 Content-Type: application/json
 
+###
+# @name list-notes-pagination
+# @prompt offset
+# @prompt limit
+GET {{baseUrl}}/notes/?offset={{offset}}&limit={{limit}}
+Content-Type: application/json
+
 
 ###
 #  @name create-note
