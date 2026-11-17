@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE "notes"
+    ADD COLUMN "archived_at" TIMESTAMPTZ NULL;
+
+COMMIT;

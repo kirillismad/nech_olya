@@ -33,6 +33,20 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		offsetStr = "0"
 	}
 
+	includeArchivedStr:=r.URL.Query().Get("include_archived")
+
+	var includeArchived bool
+	if includeArchivedStr == "" {
+		includeArchived = false
+	} else{
+		parsed,err:=strconv.ParseBool(includeArchivedStr)
+		if err!=nil{
+			writeError(w,http.StatusBadRequest,"invalid include_archived value")
+			return
+		}
+		includeArchived = parsed
+	}
+
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid limit")
@@ -47,7 +61,7 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset})
+	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, IncludeArchived: includeArchived})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrValidation):

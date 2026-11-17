@@ -20,6 +20,19 @@ Content-Type: application/json
   "body": "This is the content of my note."
 }
 
+###
+# @name archive-note
+# @prompt noteId
+POST {{baseUrl}}/notes/{{noteId}}/archive
+Content-Type: application/json
+
+###
+# @name restore-note
+# @prompt noteId
+POST {{baseUrl}}/notes/{{noteId}}/restore
+Content-Type: application/json
+
+
 ### 
 # @name get-note
 # @prompt noteId

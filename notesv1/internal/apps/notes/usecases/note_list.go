@@ -10,6 +10,7 @@ import (
 type ListNotesInput struct {
 	Limit  int64
 	Offset int64
+	IncludeArchived bool
 }
 
 func(input ListNotesInput) Validate() error {
