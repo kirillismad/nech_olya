@@ -7,11 +7,13 @@ import (
 	"notesv1/internal/apps/notes/dto"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
 )
 
 type CreateNoteInput struct {
-	Title string
-	Body  *string
+	Title  string
+	Body   *string
+	UserID uuid.UUID
 }
 
 func (in *CreateNoteInput) Validate() error {

@@ -13,7 +13,7 @@ import (
 
 func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResult, error) {
 	query := fmt.Sprintf(
-		"SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+		"SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1 AND %s = $2",
 		entities.NotesIDColumn,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
@@ -21,11 +21,12 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 		entities.NotesUpdatedAtColumn,
 		entities.NotesTable,
 		entities.NotesIDColumn,
+		entities.NotesUserIDColumn,
 	)
 
 	var note entities.Note
 
-	err := r.db.QueryRowContext(ctx, query, q.ID).Scan(
+	err := r.db.QueryRowContext(ctx, query, q.ID, q.UserID).Scan(
 		&note.ID,
 		&note.Title,
 		&note.Body,

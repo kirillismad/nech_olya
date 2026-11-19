@@ -6,6 +6,8 @@ import (
 	"notesv1/internal/apps/notes/usecases"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ListNotesResponseItems struct {
@@ -21,6 +23,17 @@ type ListNotesResponse struct {
 }
 
 func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is required")
+		return
+	}
+
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is not a valid UUID")
+		return
+	}
 	ctx := r.Context()
 
 	limitStr := r.URL.Query().Get("limit")
@@ -47,7 +60,7 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset})
+	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, UserID: userIDParsed})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrValidation):

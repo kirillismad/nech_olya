@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE "notes"
+DROP COLUMN "user_id";
+
+COMMIT;
