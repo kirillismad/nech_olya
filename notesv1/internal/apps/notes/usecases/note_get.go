@@ -8,10 +8,12 @@ import (
 	"notesv1/internal/apps/notes/models"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
 )
 
 type GetNoteInput struct {
-	ID int64
+	ID     int64
+	UserID uuid.UUID
 }
 
 func (in *GetNoteInput) Validate() error {

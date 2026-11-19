@@ -10,13 +10,14 @@ import (
 
 func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.CreateNoteResult, error) {
 	query := fmt.Sprintf(
-		"INSERT INTO %s (%s, %s, %s, %s) VALUES ($1, $2, $3, $4) RETURNING %s",
+		"INSERT INTO %s (%s, %s, %s, %s, %s) VALUES ($1, $2, $3, $4, $5) RETURNING %s",
 		entities.NotesTable,
 		entities.NotesTitleColumn,
 		entities.NotesBodyColumn,
 		entities.NotesCreatedAtColumn,
 		entities.NotesUpdatedAtColumn,
 		entities.NotesIDColumn,
+		entities.NotesUserIDColumn,
 	)
 	entity := entities.Note{
 		Title: q.Title,
@@ -29,6 +30,7 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 		}(),
 		CreatedAt: q.CreatedAt,
 		UpdatedAt: q.UpdatedAt,
+		UserID:    q.UserID,
 	}
 
 	var id int64
@@ -40,6 +42,7 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 		entity.Body,
 		entity.CreatedAt,
 		entity.UpdatedAt,
+		entity.UserID,
 	).Scan(&id)
 	if err != nil {
 		return dto.CreateNoteResult{}, fmt.Errorf("failed to create note: %w", err)

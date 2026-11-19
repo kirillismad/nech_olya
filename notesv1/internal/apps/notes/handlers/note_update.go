@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
 	"notesv1/internal/logger"
+
+	"github.com/google/uuid"
 )
 
 type UpdateNoteRequest struct {
@@ -15,6 +17,17 @@ type UpdateNoteRequest struct {
 }
 
 func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is required")
+		return
+	}
+
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is not a valid UUID")
+		return
+	}
 	log := logger.FromContext(r.Context())
 
 	id, err := noteID(r)
@@ -32,9 +45,10 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := usecases.UpdateNoteInput{
-		ID:    id,
-		Title: req.Title,
-		Body:  req.Body,
+		ID:     id,
+		Title:  req.Title,
+		Body:   req.Body,
+		UserID: userIDParsed,
 	}
 
 	_, err = h.usecases.UpdateNote(r.Context(), input)

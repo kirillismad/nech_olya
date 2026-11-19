@@ -8,6 +8,8 @@ import (
 	"notesv1/internal/logger"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type GetNoteResponse struct {
@@ -19,6 +21,17 @@ type GetNoteResponse struct {
 }
 
 func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is required")
+		return
+	}
+
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "X-User-ID header is not a valid UUID")
+		return
+	}
 	log := logger.FromContext(r.Context())
 
 	id, err := noteID(r)
@@ -28,7 +41,7 @@ func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := usecases.GetNoteInput{ID: id}
+	input := usecases.GetNoteInput{ID: id, UserID: userIDParsed}
 
 	result, err := h.usecases.GetNote(r.Context(), input)
 	if err != nil {
