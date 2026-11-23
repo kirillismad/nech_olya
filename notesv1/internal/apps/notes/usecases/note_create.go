@@ -14,6 +14,7 @@ type CreateNoteInput struct {
 	Title  string
 	Body   *string
 	UserID uuid.UUID
+	Tags   []string
 }
 
 func (in *CreateNoteInput) Validate() error {
@@ -24,7 +25,8 @@ func (in *CreateNoteInput) Validate() error {
 }
 
 type CreateNoteOutput struct {
-	ID int64
+	ID   int64
+	Tags []string
 }
 
 func (u *Usecases) CreateNote(ctx context.Context, input CreateNoteInput) (CreateNoteOutput, error) {
@@ -32,19 +34,37 @@ func (u *Usecases) CreateNote(ctx context.Context, input CreateNoteInput) (Creat
 		return CreateNoteOutput{}, fmt.Errorf("invalid create note input: %w", errors.Join(err, ErrValidation))
 	}
 
-	now := u.timeProvider.Now()
-
-	repo := u.transactionManager.GetRepository()
-
-	result, err := repo.CreateNote(ctx, dto.CreateNoteCommand{
-		Title:     input.Title,
-		Body:      input.Body,
-		CreatedAt: now,
-		UpdatedAt: now,
-	})
-	if err != nil {
-		return CreateNoteOutput{}, fmt.Errorf("failed to create note: %w", err)
+	if input.UserID == uuid.Nil {
+		return CreateNoteOutput{}, ErrValidation
 	}
 
-	return CreateNoteOutput{ID: result.ID}, nil
+	tags, err := normalizeTags(input.Tags)
+	if err != nil {
+		return CreateNoteOutput{}, err
+	}
+
+	now := u.timeProvider.Now()
+	var createdID int64
+
+	err = u.transactionManager.WithTransaction(ctx, func(repo Repository) error {
+		result, err := repo.CreateNote(ctx, dto.CreateNoteCommand{
+			UserID:    input.UserID,
+			Title:     input.Title,
+			Body:      input.Body,
+			Tags:      tags,
+			CreatedAt: now,
+			UpdatedAt: now,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create note: %w", err)
+		}
+
+		createdID = result.ID
+		return nil
+	})
+	if err != nil {
+		return CreateNoteOutput{}, err
+	}
+
+	return CreateNoteOutput{ID: createdID, Tags: tags}, nil
 }

@@ -65,10 +65,9 @@ task migrate-up-all
 
 `task up-db` запускает БД в фоне и ждёт успешного health-check.
 `task migrate-up-all` также запускает БД через зависимость `up-db` и использует
-DSN `postgres://postgres@localhost:5432/postgres?sslmode=disable`.
+DSN `postgres://postgres@127.0.0.1:5433/postgres?sslmode=disable`.
 PostgreSQL настроен с аутентификацией `trust`: пароль не требуется.
-Порт `5432` опубликован на всех интерфейсах хоста, поэтому эта конфигурация
-предназначена только для изолированного окружения разработки. Данные хранятся
+Порт `5433` опубликован на `127.0.0.1` хоста. Данные хранятся
 в именованном томе `postgres-data`, смонтированном в `/var/lib/postgresql/data`.
 
 Сборка и запуск контейнера HTTP-сервиса:

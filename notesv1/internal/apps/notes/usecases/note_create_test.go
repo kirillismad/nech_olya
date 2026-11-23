@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -25,19 +26,23 @@ func TestCreateNote(t *testing.T) {
 
 		inputTitle := "title1"
 		inputBody := new("body1")
+		inputUserID := uuid.New()
 		createdID := int64(42)
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().CreateNote(ctx, dto.CreateNoteCommand{
 			Title:     inputTitle,
 			Body:      inputBody,
+			UserID:    inputUserID,
+			Tags:      []string{},
 			CreatedAt: now,
 			UpdatedAt: now,
 		}).Return(dto.CreateNoteResult{ID: createdID}, nil).Times(1)
 
 		input := usecases.CreateNoteInput{
-			Title: inputTitle,
-			Body:  inputBody,
+			Title:  inputTitle,
+			Body:   inputBody,
+			UserID: inputUserID,
 		}
 		output, err := newUsecases(deps).CreateNote(ctx, input)
 		r.NoError(err)
@@ -52,16 +57,19 @@ func TestCreateNote(t *testing.T) {
 		ctx := newCtx()
 		now := time.Now()
 		createdID := int64(43)
+		userID := uuid.New()
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().CreateNote(ctx, dto.CreateNoteCommand{
 			Title:     "title1",
 			Body:      nil,
+			UserID:    userID,
+			Tags:      []string{},
 			CreatedAt: now,
 			UpdatedAt: now,
 		}).Return(dto.CreateNoteResult{ID: createdID}, nil)
 
-		output, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: "title1"})
+		output, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: "title1", UserID: userID})
 		r.NoError(err)
 		r.Equal(createdID, output.ID)
 	})
@@ -74,17 +82,20 @@ func TestCreateNote(t *testing.T) {
 		ctx := newCtx()
 		now := time.Now()
 		createdID := int64(44)
+		userID := uuid.New()
 		title := strings.Repeat("я", 256)
 
 		deps.timeProvider.EXPECT().Now().Return(now)
 		deps.repo.EXPECT().CreateNote(ctx, dto.CreateNoteCommand{
 			Title:     title,
 			Body:      nil,
+			UserID:    userID,
+			Tags:      []string{},
 			CreatedAt: now,
 			UpdatedAt: now,
 		}).Return(dto.CreateNoteResult{ID: createdID}, nil)
 
-		output, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: title})
+		output, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: title, UserID: userID})
 		r.NoError(err)
 		r.Equal(createdID, output.ID)
 	})
@@ -129,11 +140,12 @@ func TestCreateNote(t *testing.T) {
 		deps := newDeps(t)
 		ctx := newCtx()
 		repositoryErr := errors.New("database unavailable")
+		userID := uuid.New()
 
 		deps.timeProvider.EXPECT().Now().Return(time.Now())
 		deps.repo.EXPECT().CreateNote(mock.Anything, mock.Anything).Return(dto.CreateNoteResult{}, repositoryErr)
 
-		_, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: "title1"})
+		_, err := newUsecases(deps).CreateNote(ctx, usecases.CreateNoteInput{Title: "title1", UserID: userID})
 		require.ErrorIs(t, err, repositoryErr)
 	})
 }

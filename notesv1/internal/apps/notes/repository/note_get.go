@@ -40,6 +40,7 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 
 		return dto.GetNoteResult{}, fmt.Errorf("failed to get note: %w", err)
 	}
+	tags, err := r.loadNoteTags(ctx, note.ID, q.UserID)
 
 	model := &models.Note{
 		ID:    note.ID,
@@ -51,6 +52,7 @@ func (r repo) GetNote(ctx context.Context, q dto.GetNoteQuery) (dto.GetNoteResul
 
 			return &note.Body.String
 		}(),
+		Tags:      tags,
 		CreatedAt: note.CreatedAt,
 		UpdatedAt: note.UpdatedAt,
 	}

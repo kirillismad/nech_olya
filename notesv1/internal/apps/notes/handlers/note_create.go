@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
 
@@ -9,12 +10,14 @@ import (
 )
 
 type CreateNoteRequest struct {
-	Title string  `json:"title"`
-	Body  *string `json:"body"`
+	Title string   `json:"title"`
+	Body  *string  `json:"body"`
+	Tags  []string `json:"tags"`
 }
 
 type CreateNoteResponse struct {
-	ID int64 `json:"id"`
+	ID   int64    `json:"id"`
+	Tags []string `json:"tags"`
 }
 
 func (h *Handlers) CreateNote(w http.ResponseWriter, r *http.Request) {
@@ -45,12 +48,21 @@ func (h *Handlers) CreateNote(w http.ResponseWriter, r *http.Request) {
 		Title:  req.Title,
 		Body:   req.Body,
 		UserID: userIDParsed,
+		Tags:   req.Tags,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create note")
-
-		return
+		switch {
+		case errors.Is(err, usecases.ErrNoteNotFound):
+			writeError(w, http.StatusNotFound, "note not found")
+			return
+		case errors.Is(err, usecases.ErrValidation):
+			writeError(w, http.StatusBadRequest, "invalid validation")
+			return
+		default:
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
-	writeJSON(w, http.StatusCreated, CreateNoteResponse{ID: result.ID})
+	writeJSON(w, http.StatusCreated, CreateNoteResponse{ID: result.ID, Tags: result.Tags})
 }

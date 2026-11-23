@@ -3,7 +3,7 @@ version: '3'
 dotenv: ['.env']
 
 vars:
-  MIGRATION_DB_DSN: postgres://postgres@localhost:5432/postgres?sslmode=disable
+  MIGRATION_DB_DSN: postgres://postgres@127.0.0.1:5433/postgres?sslmode=disable
   DOCKER_COMPOSE_FILE: docker/docker-compose.yaml
 
 tasks:

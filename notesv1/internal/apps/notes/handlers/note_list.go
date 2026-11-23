@@ -14,6 +14,7 @@ type ListNotesResponseItems struct {
 	ID        int64     `json:"id"`
 	Title     string    `json:"title"`
 	Body      *string   `json:"body,omitempty"`
+	Tags      []string  `json:"tags,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -35,6 +36,12 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
+
+	var tag *string
+	if r.URL.Query().Has("tag") {
+		value := r.URL.Query().Get("tag")
+		tag = &value
+	}
 
 	limitStr := r.URL.Query().Get("limit")
 	if limitStr == "" {
@@ -60,7 +67,7 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, UserID: userIDParsed})
+	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, UserID: userIDParsed, Tag: tag})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrValidation):
@@ -80,6 +87,7 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 			ID:        note.ID,
 			Title:     note.Title,
 			Body:      note.Body,
+			Tags:      note.Tags,
 			CreatedAt: note.CreatedAt,
 			UpdatedAt: note.UpdatedAt,
 		})

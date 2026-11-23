@@ -4,45 +4,43 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"notesv1/internal/apps/notes/dto"
-	"notesv1/internal/entities"
+	"notesv1/internal/apps/notes/usecases"
 )
 
 func (r repo) UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.UpdateNoteResult, error) {
-	query := fmt.Sprintf(
-		"UPDATE %s SET %s = $1, %s = $2, %s = $3 WHERE %s = $4 AND %s=$5",
-		entities.NotesTable,
-		entities.NotesTitleColumn,
-		entities.NotesBodyColumn,
-		entities.NotesUpdatedAtColumn,
-		entities.NotesIDColumn,
-		entities.NotesUserIDColumn,
-	)
-
-	entity := entities.Note{
-		ID:    q.ID,
-		Title: q.Title,
-		Body: func() sql.NullString {
-			if q.Body == nil {
-				return sql.NullString{}
-			}
-
-			return sql.NullString{String: *q.Body, Valid: true}
-		}(),
-		UpdatedAt: q.UpdatedAt,
+	body := sql.NullString{}
+	if q.Body != nil {
+		body = sql.NullString{String: *q.Body, Valid: true}
 	}
 
-	_, err := r.db.ExecContext(
-		ctx,
-		query,
-		entity.Title,
-		entity.Body,
-		entity.UpdatedAt,
-		entity.ID,
-		entity.UserID,
-	)
+	result, err := r.db.ExecContext(ctx, `
+        UPDATE notes
+        SET title = $1, body = $2, updated_at = $3
+        WHERE id = $4 AND user_id = $5
+    `, q.Title, body, q.UpdatedAt, q.ID, q.UserID)
 	if err != nil {
-		return dto.UpdateNoteResult{}, fmt.Errorf("failed to update note: %w", err)
+		return dto.UpdateNoteResult{}, fmt.Errorf("update note: %w", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return dto.UpdateNoteResult{}, fmt.Errorf("check updated note: %w", err)
+	}
+	if affected == 0 {
+		return dto.UpdateNoteResult{}, usecases.ErrNoteNotFound
+	}
+
+	_, err = r.db.ExecContext(ctx, `
+        DELETE FROM note_tags WHERE note_id = $1
+    `, q.ID)
+	if err != nil {
+		return dto.UpdateNoteResult{}, fmt.Errorf("remove old note tags: %w", err)
+	}
+
+	if err := r.addNoteTags(ctx, q.ID, q.UserID, q.Tags); err != nil {
+		return dto.UpdateNoteResult{}, err
 	}
 
 	return dto.UpdateNoteResult{}, nil

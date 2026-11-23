@@ -15,6 +15,7 @@ type UpdateNoteInput struct {
 	Title  string
 	Body   *string
 	UserID uuid.UUID
+	Tags   []string
 }
 
 func (in *UpdateNoteInput) Validate() error {
@@ -25,36 +26,43 @@ func (in *UpdateNoteInput) Validate() error {
 	)
 }
 
-type UpdateNoteOutput struct{}
+type UpdateNoteOutput struct {
+	Tags []string
+}
 
 func (u *Usecases) UpdateNote(ctx context.Context, input UpdateNoteInput) (UpdateNoteOutput, error) {
 	if err := input.Validate(); err != nil {
 		return UpdateNoteOutput{}, fmt.Errorf("invalid update note input: %w", errors.Join(err, ErrValidation))
 	}
 
+	if input.UserID == uuid.Nil {
+		return UpdateNoteOutput{}, ErrValidation
+	}
+
+	tags, err := normalizeTags(input.Tags)
+	if err != nil {
+		return UpdateNoteOutput{}, err
+	}
+
 	now := u.timeProvider.Now()
 
-	err := u.transactionManager.WithTransaction(ctx, func(repo Repository) error {
-		note, err := repo.GetNote(ctx, dto.GetNoteQuery{ID: input.ID})
-		if err != nil {
-			return fmt.Errorf("failed to get note: %w", err)
-		}
-
-		_, err = repo.UpdateNote(ctx, dto.UpdateNoteCommand{
-			ID:        note.Note.ID,
+	err = u.transactionManager.WithTransaction(ctx, func(repo Repository) error {
+		_, err := repo.UpdateNote(ctx, dto.UpdateNoteCommand{
+			ID:        input.ID,
+			UserID:    input.UserID,
 			Title:     input.Title,
 			Body:      input.Body,
+			Tags:      tags,
 			UpdatedAt: now,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to update note: %w", err)
 		}
-
 		return nil
 	})
 	if err != nil {
 		return UpdateNoteOutput{}, err
 	}
 
-	return UpdateNoteOutput{}, nil
+	return UpdateNoteOutput{Tags: tags}, nil
 }

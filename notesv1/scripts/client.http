@@ -1,52 +1,57 @@
 @baseUrl = http://localhost:8080
+@userId = 11111111-1111-4111-8111-111111111111
+@noteId = 1
+@tag = work
 
 ###
-# @name health-check
+# @name healthCheck
 GET {{baseUrl}}/alive
 
 ###
-# @name list-notes
-GET {{baseUrl}}/notes/
-Content-Type: application/json
-
-
-###
-#  @name create-note
+# @name createNote
 POST {{baseUrl}}/notes/
+X-User-ID: {{userId}}
 Content-Type: application/json
 
 {
-  "title": "My Note",
-  "body": "This is the content of my note."
+  "title": "title",
+  "body": "body",
+  "tags": ["work", "plans"]
 }
-
-### 
-# @name get-note
-# @prompt noteId
-GET {{baseUrl}}/notes/{{noteId}}
-Content-Type: application/json
-
-
-### 
-# @name update-note
-# @prompt noteId
-PUT {{baseUrl}}/notes/{{noteId}}
-Content-Type: application/json
-
-{
-  "title": "My Note (updated)",
-  "body": "This is the updated content of my note."
-}
-
-
-### 
-# @name delete-note
-# @prompt noteId
-DELETE {{baseUrl}}/notes/{{noteId}}
-Content-Type: application/json
-
-
 
 ###
-#@name count-notes
+# @name listNotes
+GET {{baseUrl}}/notes/?limit=20&offset=0
+X-User-ID: {{userId}}
+
+###
+# @name listNotesByTag
+GET {{baseUrl}}/notes/?limit=20&offset=0&tag={{tag}}
+X-User-ID: {{userId}}
+
+### 
+# @name getNote
+GET {{baseUrl}}/notes/{{noteId}}
+X-User-ID: {{userId}}
+
+###
+# @name updateNote
+PUT {{baseUrl}}/notes/{{noteId}}
+X-User-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "title": "title2",
+  "body": "body2",
+  "tags": ["work"]
+}
+
+###
+# @name countNotes
 GET {{baseUrl}}/notes/count
+X-User-ID: {{userId}}
+
+###
+# @name deleteNote
+DELETE {{baseUrl}}/notes/{{noteId}}
+X-User-ID: {{userId}}

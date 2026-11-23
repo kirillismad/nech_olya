@@ -16,6 +16,7 @@ type GetNoteResponse struct {
 	ID        int64     `json:"id"`
 	Title     string    `json:"title"`
 	Body      *string   `json:"body,omitempty"`
+	Tags      []string  `json:"tags,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -64,6 +65,7 @@ func (h *Handlers) GetNote(w http.ResponseWriter, r *http.Request) {
 		ID:        result.Note.ID,
 		Title:     result.Note.Title,
 		Body:      result.Note.Body,
+		Tags:      result.Note.Tags,
 		CreatedAt: result.Note.CreatedAt,
 		UpdatedAt: result.Note.UpdatedAt,
 	})

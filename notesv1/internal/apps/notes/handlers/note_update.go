@@ -12,8 +12,13 @@ import (
 )
 
 type UpdateNoteRequest struct {
-	Title string  `json:"title"`
-	Body  *string `json:"body"`
+	Title string    `json:"title"`
+	Body  *string   `json:"body"`
+	Tags  *[]string `json:"tags"`
+}
+
+type UpdateNoteResponse struct {
+	Tags []string `json:"tags"`
 }
 
 func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +49,21 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Tags == nil {
+		writeError(w, http.StatusBadRequest, "tags field is required")
+
+		return
+	}
+
 	input := usecases.UpdateNoteInput{
 		ID:     id,
 		Title:  req.Title,
 		Body:   req.Body,
 		UserID: userIDParsed,
+		Tags:   *req.Tags,
 	}
 
-	_, err = h.usecases.UpdateNote(r.Context(), input)
+	result, err := h.usecases.UpdateNote(r.Context(), input)
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrNoteNotFound):
@@ -61,6 +73,8 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 				slog.Any("input", input),
 			)
 			writeError(w, http.StatusNotFound, "note not found")
+		case errors.Is(err, usecases.ErrValidation):
+			writeError(w, http.StatusBadRequest, "invalid validation")
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -68,5 +82,5 @@ func (h *Handlers) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	writeJSON(w, http.StatusOK, UpdateNoteResponse{Tags: result.Tags})
 }

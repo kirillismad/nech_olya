@@ -9,18 +9,26 @@ import (
 )
 
 func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNotesResult, error) {
-	query := fmt.Sprintf(
-		"SELECT %s, %s, %s, %s, %s FROM %s WHERE %s =$1 ORDER BY id LIMIT $2 OFFSET $3",
-		entities.NotesIDColumn,
-		entities.NotesTitleColumn,
-		entities.NotesBodyColumn,
-		entities.NotesCreatedAtColumn,
-		entities.NotesUpdatedAtColumn,
-		entities.NotesTable,
-		entities.NotesUserIDColumn,
-	)
+	query := `
+    SELECT n.id, n.title, n.body, n.created_at, n.updated_at
+    FROM notes AS n
+    WHERE n.user_id = $1
+      AND (
+        $2::text IS NULL
+        OR EXISTS (
+            SELECT 1
+            FROM note_tags AS nt
+            JOIN tags AS t ON t.id = nt.tag_id
+            WHERE nt.note_id = n.id
+              AND t.user_id = n.user_id
+              AND t.name = $2
+        )
+      )
+    ORDER BY n.id
+    LIMIT $3 OFFSET $4
+`
 
-	rows, err := r.db.QueryContext(ctx, query, q.UserID, q.Limit, q.Offset)
+	rows, err := r.db.QueryContext(ctx, query, q.UserID, q.Tag, q.Limit, q.Offset)
 	if err != nil {
 		return dto.ListNotesResult{}, fmt.Errorf("failed to list notes: %w", err)
 	}
@@ -49,6 +57,11 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
 
 	modelList := make([]*models.Note, 0, len(entityList))
 	for _, item := range entityList {
+		tags, err := r.loadNoteTags(ctx, item.ID, q.UserID)
+		if err != nil {
+			return dto.ListNotesResult{}, fmt.Errorf("failed to load note tags: %w", err)
+		}
+
 		model := &models.Note{
 			ID:    item.ID,
 			Title: item.Title,
@@ -59,6 +72,7 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
 
 				return &item.Body.String
 			}(),
+			Tags:      tags,
 			CreatedAt: item.CreatedAt,
 			UpdatedAt: item.UpdatedAt,
 		}

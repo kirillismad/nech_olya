@@ -33,7 +33,7 @@ func (u *Usecases) GetNote(ctx context.Context, input GetNoteInput) (GetNoteOutp
 
 	repo := u.transactionManager.GetRepository()
 
-	result, err := repo.GetNote(ctx, dto.GetNoteQuery{ID: input.ID})
+	result, err := repo.GetNote(ctx, dto.GetNoteQuery{ID: input.ID, UserID: input.UserID})
 	if err != nil {
 		return GetNoteOutput{}, fmt.Errorf("failed to get note: %w", err)
 	}

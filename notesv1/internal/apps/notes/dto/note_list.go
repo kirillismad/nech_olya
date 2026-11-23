@@ -10,6 +10,7 @@ type ListNotesQuery struct {
 	Limit  int64
 	Offset int64
 	UserID uuid.UUID
+	Tag    *string
 }
 
 type ListNotesResult struct {
