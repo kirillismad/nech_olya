@@ -30,6 +30,7 @@ func (r repo) UpdateNote(ctx context.Context, q dto.UpdateNoteCommand) (dto.Upda
 			return sql.NullString{String: *q.Body, Valid: true}
 		}(),
 		UpdatedAt: q.UpdatedAt,
+		UserID:    q.UserID,
 	}
 
 	_, err := r.db.ExecContext(

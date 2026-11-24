@@ -1,6 +1,6 @@
 BEGIN;
 
-DROP TABLE "notes"
+ALTER TABLE "notes"
 DROP COLUMN "user_id";
 
 COMMIT;

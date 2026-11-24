@@ -16,8 +16,8 @@ func (r repo) CreateNote(ctx context.Context, q dto.CreateNoteCommand) (dto.Crea
 		entities.NotesBodyColumn,
 		entities.NotesCreatedAtColumn,
 		entities.NotesUpdatedAtColumn,
-		entities.NotesIDColumn,
 		entities.NotesUserIDColumn,
+		entities.NotesIDColumn,
 	)
 	entity := entities.Note{
 		Title: q.Title,
