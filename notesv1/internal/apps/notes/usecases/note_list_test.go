@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,16 +21,17 @@ func TestListNotes(t *testing.T) {
 		r := require.New(t)
 		deps := newDeps(t)
 		ctx := newCtx()
+		userID := uuid.New()
 
 		items := []*models.Note{
 			{ID: 1, Title: "title1", Body: new(string), CreatedAt: time.Now()},
 			{ID: 2, Title: "title2", CreatedAt: time.Now()},
 		}
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1}).
+		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1, UserID: userID}).
 			Return(dto.ListNotesResult{Items: items}, nil).Times(1)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1})
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1, UserID: userID})
 		r.NoError(err)
 		r.Equal(items, output.Items)
 	})
@@ -40,11 +42,12 @@ func TestListNotes(t *testing.T) {
 		r := require.New(t)
 		deps := newDeps(t)
 		ctx := newCtx()
+		userID := uuid.New()
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1}).
+		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{Limit: 10, Offset: 1, UserID: userID}).
 			Return(dto.ListNotesResult{Items: []*models.Note{}}, nil).Times(1)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1})
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{Limit: 10, Offset: 1, UserID: userID})
 		r.NoError(err)
 		r.Empty(output.Items)
 	})
@@ -54,12 +57,18 @@ func TestListNotes(t *testing.T) {
 
 		deps := newDeps(t)
 		ctx := newCtx()
+		userID := uuid.New()
 		repositoryErr := errors.New("database unavailable")
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{}).
-			Return(dto.ListNotesResult{}, repositoryErr)
+		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{
+			Limit:  10,
+			UserID: userID,
+		}).Return(dto.ListNotesResult{}, repositoryErr)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
+		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:  10,
+			UserID: userID,
+		})
 		require.ErrorIs(t, err, repositoryErr)
 		require.Zero(t, output)
 	})
@@ -91,10 +100,12 @@ func TestListNotes(t *testing.T) {
 
 		deps := newDeps(t)
 		ctx := newCtx()
+		userID := uuid.New()
 
 		expected := dto.ListNotesQuery{
 			Limit:  2,
 			Offset: 1,
+			UserID: userID,
 		}
 
 		deps.repo.EXPECT().
@@ -109,6 +120,7 @@ func TestListNotes(t *testing.T) {
 		out, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
 			Limit:  2,
 			Offset: 1,
+			UserID: userID,
 		})
 
 		require.NoError(t, err)

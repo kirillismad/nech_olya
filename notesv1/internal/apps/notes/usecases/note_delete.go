@@ -7,10 +7,12 @@ import (
 	"notesv1/internal/apps/notes/dto"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
 )
 
 type DeleteNoteInput struct {
-	ID int64
+	ID     int64
+	UserID uuid.UUID
 }
 
 func (in *DeleteNoteInput) Validate() error {

@@ -3,6 +3,7 @@ package entities
 import (
 	"database/sql"
 	"time"
+	"github.com/google/uuid"
 )
 
 type Note struct {
@@ -11,6 +12,7 @@ type Note struct {
 	Body      sql.NullString
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	UserID uuid.UUID
 }
 
 const (
@@ -21,4 +23,5 @@ const (
 	NotesBodyColumn      = "body"
 	NotesCreatedAtColumn = "created_at"
 	NotesUpdatedAtColumn = "updated_at"
+	NotesUserIDColumn    = "user_id"
 )
