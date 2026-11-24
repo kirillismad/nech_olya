@@ -11,6 +11,7 @@ type ListNotesQuery struct {
 	Offset int64
 	UserID uuid.UUID
 	Tag    *string
+	Query  *string
 }
 
 type ListNotesResult struct {

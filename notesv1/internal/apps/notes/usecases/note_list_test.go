@@ -128,4 +128,97 @@ func TestListNotes(t *testing.T) {
 		require.Equal(t, int64(2), out.Items[0].ID)
 		require.Equal(t, int64(3), out.Items[1].ID)
 	})
+
+	t.Run("tc7: empty query — no search filter", func(t *testing.T) {
+		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
+		userID := uuid.New()
+
+		expected := dto.ListNotesQuery{
+			Limit:  20,
+			Offset: 0,
+			UserID: userID,
+			Query:  nil,
+		}
+
+		deps.repo.EXPECT().
+			ListNotes(ctx, expected).
+			Return(dto.ListNotesResult{Items: []*models.Note{
+				{ID: 2},
+				{ID: 3},
+			}}, nil)
+
+		out, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:  20,
+			UserID: userID,
+			Query:  nil,
+		})
+
+		r.NoError(err)
+		r.Len(out.Items, 2)
+		r.Equal(int64(2), out.Items[0].ID)
+		r.Equal(int64(3), out.Items[1].ID)
+	})
+
+	t.Run("tc8: ok query nil", func(t *testing.T) {
+		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
+		userID := uuid.New()
+
+		empty := ""
+		expected := dto.ListNotesQuery{
+			Limit:  20,
+			Offset: 0,
+			UserID: userID,
+			Query:  &empty,
+		}
+
+		deps.repo.EXPECT().
+			ListNotes(ctx, expected).
+			Return(dto.ListNotesResult{}, nil)
+
+		out, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:  20,
+			UserID: userID,
+			Query:  &empty,
+		})
+
+		r.NoError(err)
+		r.Empty(out.Items)
+	})
+	t.Run("tc9: not empty query", func(t *testing.T) {
+		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
+		userID := uuid.New()
+		q := "go"
+		expected := dto.ListNotesQuery{
+			Limit:  20,
+			Offset: 0,
+			UserID: userID,
+			Query:  &q,
+		}
+
+		deps.repo.EXPECT().
+			ListNotes(ctx, expected).
+			Return(dto.ListNotesResult{}, nil)
+
+		out, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:  20,
+			UserID: userID,
+			Query:  &q,
+		})
+
+		r.NoError(err)
+		r.Empty(out.Items)
+	})
+
 }

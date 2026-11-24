@@ -67,7 +67,12 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, UserID: userIDParsed, Tag: tag})
+	var query *string
+	if q := r.URL.Query().Get("q"); q != "" {
+		query = &q
+	}
+
+	result, err := h.usecases.ListNotes(ctx, usecases.ListNotesInput{Limit: limit, Offset: offset, UserID: userIDParsed, Tag: tag, Query: query})
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrValidation):

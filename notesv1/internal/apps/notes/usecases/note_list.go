@@ -14,6 +14,7 @@ type ListNotesInput struct {
 	Offset int64
 	UserID uuid.UUID
 	Tag    *string
+	Query  *string
 }
 
 func (input ListNotesInput) Validate() error {
@@ -38,7 +39,7 @@ func (u *Usecases) ListNotes(ctx context.Context, input ListNotesInput) (ListNot
 	}
 	repo := u.transactionManager.GetRepository()
 
-	listNotesResult, err := repo.ListNotes(ctx, dto.ListNotesQuery{Limit: input.Limit, Offset: input.Offset, UserID: input.UserID, Tag: input.Tag})
+	listNotesResult, err := repo.ListNotes(ctx, dto.ListNotesQuery{Limit: input.Limit, Offset: input.Offset, UserID: input.UserID, Tag: input.Tag,Query:input.Query})
 	if err != nil {
 		return ListNotesOutput{}, fmt.Errorf("failed to list notes: %w", err)
 	}

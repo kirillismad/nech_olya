@@ -9,6 +9,11 @@ import (
 )
 
 func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNotesResult, error) {
+	var pattern *string
+	if q.Query != nil {
+		p := "%" + *q.Query + "%"
+		pattern = &p
+	}
 	query := `
     SELECT n.id, n.title, n.body, n.created_at, n.updated_at
     FROM notes AS n
@@ -24,11 +29,16 @@ func (r repo) ListNotes(ctx context.Context, q dto.ListNotesQuery) (dto.ListNote
               AND t.name = $2
         )
       )
+	 AND (
+        $3::text IS NULL
+        OR n.title ILIKE $3
+        OR COALESCE(n.body, '') ILIKE $3
+      )
     ORDER BY n.id
     LIMIT $3 OFFSET $4
 `
 
-	rows, err := r.db.QueryContext(ctx, query, q.UserID, q.Tag, q.Limit, q.Offset)
+	rows, err := r.db.QueryContext(ctx, query, q.UserID, q.Tag, pattern, q.Limit, q.Offset)
 	if err != nil {
 		return dto.ListNotesResult{}, fmt.Errorf("failed to list notes: %w", err)
 	}
