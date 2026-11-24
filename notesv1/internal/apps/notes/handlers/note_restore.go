@@ -46,5 +46,5 @@ func (h *Handlers) RestoreNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, RestoreNoteResponse{})
+	w.WriteHeader(http.StatusOK)
 }

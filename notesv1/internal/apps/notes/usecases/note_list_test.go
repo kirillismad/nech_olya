@@ -55,11 +55,13 @@ func TestListNotes(t *testing.T) {
 		deps := newDeps(t)
 		ctx := newCtx()
 		repositoryErr := errors.New("database unavailable")
+		input := usecases.ListNotesInput{Limit: 10}
+		query := dto.ListNotesQuery{Limit: 10}
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{}).
+		deps.repo.EXPECT().ListNotes(ctx, query).
 			Return(dto.ListNotesResult{}, repositoryErr)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
+		output, err := newUsecases(deps).ListNotes(ctx, input)
 		require.ErrorIs(t, err, repositoryErr)
 		require.Zero(t, output)
 	})

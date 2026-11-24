@@ -23,7 +23,7 @@ func TestNoteCount(t *testing.T) {
 
 		output, err := newUsecases(deps).NoteCount(ctx)
 		r.NoError(err)
-		r.Equal(expectedCount, output)
+		r.Equal(expectedCount, output.Count)
 	})
 
 	t.Run("tc2: error, returns error", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestNoteCount(t *testing.T) {
 		deps.repo.EXPECT().NoteCount(ctx).Return(dto.CountNotesResult{}, repositoryErr)
 
 		output, err := newUsecases(deps).NoteCount(ctx)
-		r.Error(err)
+		r.ErrorIs(err, repositoryErr)
 		r.Zero(output)
 	})
 }

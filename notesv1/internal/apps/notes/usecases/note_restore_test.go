@@ -58,4 +58,22 @@ func TestRestoreNote(t *testing.T) {
 		require.ErrorIs(t, err, usecases.ErrNoteNotFound)
 		require.Zero(t, output)
 	})
+
+	t.Run("tc4: ok, ideidempotence", func(t *testing.T) {
+		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
+
+		deps.repo.EXPECT().RestoreNote(ctx, dto.RestoreNoteQuery{
+			ID: 42,
+		}).Return(dto.RestoreNoteResult{}, nil)
+
+		output, err := newUsecases(deps).RestoreNote(ctx, usecases.RestoreNoteInput{
+			ID: 42,
+		})
+		r.NoError(err)
+		r.Equal(usecases.RestoreNoteOutput{}, output)
+	})
 }

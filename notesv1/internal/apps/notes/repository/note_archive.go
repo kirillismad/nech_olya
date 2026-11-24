@@ -10,7 +10,7 @@ import (
 
 func (r repo) ArchiveNote(ctx context.Context, q dto.ArchiveNoteQuery) (dto.ArchiveNoteResult, error) {
 	query := fmt.Sprintf(
-		"UPDATE %s SET archived_at = $2 WHERE id=$1",
+		"UPDATE %s SET archived_at = COALESCE(archived_at, $2) WHERE id=$1",
 		entities.NotesTable,
 	)
 

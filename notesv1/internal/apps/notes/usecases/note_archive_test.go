@@ -65,4 +65,25 @@ func TestArchiveNote(t *testing.T) {
 		require.ErrorIs(t, err, usecases.ErrNoteNotFound)
 		require.Zero(t, output)
 	})
+
+	t.Run("tc4: ok, ideidempotence", func(t *testing.T) {
+		t.Parallel()
+
+		r := require.New(t)
+		deps := newDeps(t)
+		ctx := newCtx()
+		now := time.Now()
+
+		deps.timeProvider.EXPECT().Now().Return(now)
+		deps.repo.EXPECT().ArchiveNote(ctx, dto.ArchiveNoteQuery{
+			ID:         42,
+			ArchivedAt: &now,
+		}).Return(dto.ArchiveNoteResult{}, nil)
+
+		output, err := newUsecases(deps).ArchiveNote(ctx, usecases.ArchiveNoteInput{
+			ID: 42,
+		})
+		r.NoError(err)
+		r.Equal(usecases.ArchiveNoteOutput{}, output)
+	})
 }

@@ -39,6 +39,8 @@ func (h *Handlers) ArchiveNote(w http.ResponseWriter, r *http.Request) {
 				slog.Any("input", input),
 			)
 			writeError(w, http.StatusNotFound, "note not found")
+		case errors.Is(err,usecases.ErrValidation):
+			writeError(w,http.StatusBadRequest,err.Error())
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -46,5 +48,5 @@ func (h *Handlers) ArchiveNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, ArchiveNoteResponse{})
+	w.WriteHeader(http.StatusOK)
 }
