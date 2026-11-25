@@ -33,17 +33,19 @@ func (h *Handlers) ListNotes(w http.ResponseWriter, r *http.Request) {
 		offsetStr = "0"
 	}
 
-	includeArchivedStr:=r.URL.Query().Get("include_archived")
+	includeArchivedStr := r.URL.Query().Get("include_archived")
 
 	var includeArchived bool
 	if includeArchivedStr == "" {
 		includeArchived = false
-	} else{
-		parsed,err:=strconv.ParseBool(includeArchivedStr)
-		if err!=nil{
-			writeError(w,http.StatusBadRequest,"invalid include_archived value")
+	} else {
+		parsed, err := strconv.ParseBool(includeArchivedStr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid include_archived value")
+
 			return
 		}
+
 		includeArchived = parsed
 	}
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"notesv1/internal/apps/notes/dto"
-	"notesv1/internal/entities"
 	"notesv1/internal/apps/notes/usecases"
+	"notesv1/internal/entities"
 )
 
 func (r repo) ArchiveNote(ctx context.Context, q dto.ArchiveNoteQuery) (dto.ArchiveNoteResult, error) {
@@ -25,6 +25,10 @@ func (r repo) ArchiveNote(ctx context.Context, q dto.ArchiveNoteQuery) (dto.Arch
 	}
 
 	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return dto.ArchiveNoteResult{}, fmt.Errorf("check affected rows: %w", err)
+	}
+
 	if rowsAffected == 0 {
 		return dto.ArchiveNoteResult{}, usecases.ErrNoteNotFound
 	}

@@ -1,6 +1,7 @@
 package handlers
 
-import	("errors"
+import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"notesv1/internal/apps/notes/usecases"
@@ -20,7 +21,7 @@ type RestoreNoteResponse struct {
 func (h *Handlers) RestoreNote(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
 
-	id, err := strconv.ParseInt(r.PathValue("id"),10,64)
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid note id")
 
@@ -39,6 +40,8 @@ func (h *Handlers) RestoreNote(w http.ResponseWriter, r *http.Request) {
 				slog.Any("input", input),
 			)
 			writeError(w, http.StatusNotFound, "note not found")
+		case errors.Is(err, usecases.ErrValidation):
+			writeError(w, http.StatusBadRequest, "invalid note id")
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}

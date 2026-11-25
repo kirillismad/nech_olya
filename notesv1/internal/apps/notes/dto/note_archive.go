@@ -1,12 +1,12 @@
 package dto
 
 import (
-	"time"
 	"notesv1/internal/apps/notes/models"
+	"time"
 )
 
 type ArchiveNoteQuery struct {
-	ID int64
+	ID         int64
 	ArchivedAt *time.Time
 }
 

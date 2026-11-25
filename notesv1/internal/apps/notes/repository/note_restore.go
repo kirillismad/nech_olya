@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"notesv1/internal/apps/notes/dto"
-	"notesv1/internal/entities"
 	"notesv1/internal/apps/notes/usecases"
+	"notesv1/internal/entities"
 )
 
 func (r repo) RestoreNote(ctx context.Context, q dto.RestoreNoteQuery) (dto.RestoreNoteResult, error) {
@@ -24,6 +24,10 @@ func (r repo) RestoreNote(ctx context.Context, q dto.RestoreNoteQuery) (dto.Rest
 	}
 
 	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return dto.RestoreNoteResult{}, fmt.Errorf("check affected rows: %w", err)
+	}
+
 	if rowsAffected == 0 {
 		return dto.RestoreNoteResult{}, usecases.ErrNoteNotFound
 	}

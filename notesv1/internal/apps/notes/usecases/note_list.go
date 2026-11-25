@@ -8,13 +8,13 @@ import (
 )
 
 type ListNotesInput struct {
-	Limit  int64
-	Offset int64
+	Limit           int64
+	Offset          int64
 	IncludeArchived bool
 }
 
-func(input ListNotesInput) Validate() error {
-if input.Limit < 1 || input.Limit > 100 {
+func (input ListNotesInput) Validate() error {
+	if input.Limit < 1 || input.Limit > 100 {
 		return ErrValidation
 	}
 
@@ -33,9 +33,10 @@ func (u *Usecases) ListNotes(ctx context.Context, input ListNotesInput) (ListNot
 	if err := input.Validate(); err != nil {
 		return ListNotesOutput{}, err
 	}
+
 	repo := u.transactionManager.GetRepository()
 
-	listNotesResult, err := repo.ListNotes(ctx, dto.ListNotesQuery{Limit: input.Limit, Offset: input.Offset})
+	listNotesResult, err := repo.ListNotes(ctx, dto.ListNotesQuery{Limit: input.Limit, Offset: input.Offset, IncludeArchived: input.IncludeArchived})
 	if err != nil {
 		return ListNotesOutput{}, fmt.Errorf("failed to list notes: %w", err)
 	}

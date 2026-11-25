@@ -24,6 +24,7 @@ func (h *Handlers) ArchiveNote(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid note id")
+
 		return
 	}
 
@@ -39,8 +40,8 @@ func (h *Handlers) ArchiveNote(w http.ResponseWriter, r *http.Request) {
 				slog.Any("input", input),
 			)
 			writeError(w, http.StatusNotFound, "note not found")
-		case errors.Is(err,usecases.ErrValidation):
-			writeError(w,http.StatusBadRequest,err.Error())
+		case errors.Is(err, usecases.ErrValidation):
+			writeError(w, http.StatusBadRequest, err.Error())
 		default:
 			writeError(w, http.StatusInternalServerError, err.Error())
 		}
