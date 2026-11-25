@@ -28,6 +28,8 @@ func (p *Package) ServeMux() *http.ServeMux {
 	mux.HandleFunc("POST /", handlers.CreateNote)
 	mux.HandleFunc("GET /{id}", handlers.GetNote)
 	mux.HandleFunc("PUT /{id}", handlers.UpdateNote)
+	mux.HandleFunc("POST /{id}/archive", handlers.ArchiveNote)
+	mux.HandleFunc("POST /{id}/restore", handlers.RestoreNote)
 	mux.HandleFunc("DELETE /{id}", handlers.DeleteNote)
 	mux.HandleFunc("GET /count", handlers.CountNotes)
 

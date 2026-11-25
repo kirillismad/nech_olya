@@ -37,6 +37,72 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 	return &MockRepository_Expecter{mock: &_m.Mock}
 }
 
+// ArchiveNote provides a mock function for the type MockRepository
+func (_mock *MockRepository) ArchiveNote(ctx context.Context, q dto.ArchiveNoteQuery) (dto.ArchiveNoteResult, error) {
+	ret := _mock.Called(ctx, q)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ArchiveNote")
+	}
+
+	var r0 dto.ArchiveNoteResult
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.ArchiveNoteQuery) (dto.ArchiveNoteResult, error)); ok {
+		return returnFunc(ctx, q)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.ArchiveNoteQuery) dto.ArchiveNoteResult); ok {
+		r0 = returnFunc(ctx, q)
+	} else {
+		r0 = ret.Get(0).(dto.ArchiveNoteResult)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, dto.ArchiveNoteQuery) error); ok {
+		r1 = returnFunc(ctx, q)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockRepository_ArchiveNote_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ArchiveNote'
+type MockRepository_ArchiveNote_Call struct {
+	*mock.Call
+}
+
+// ArchiveNote is a helper method to define mock.On call
+//   - ctx context.Context
+//   - q dto.ArchiveNoteQuery
+func (_e *MockRepository_Expecter) ArchiveNote(ctx any, q any) *MockRepository_ArchiveNote_Call {
+	return &MockRepository_ArchiveNote_Call{Call: _e.mock.On("ArchiveNote", ctx, q)}
+}
+
+func (_c *MockRepository_ArchiveNote_Call) Run(run func(ctx context.Context, q dto.ArchiveNoteQuery)) *MockRepository_ArchiveNote_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 dto.ArchiveNoteQuery
+		if args[1] != nil {
+			arg1 = args[1].(dto.ArchiveNoteQuery)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockRepository_ArchiveNote_Call) Return(archiveNoteResult dto.ArchiveNoteResult, err error) *MockRepository_ArchiveNote_Call {
+	_c.Call.Return(archiveNoteResult, err)
+	return _c
+}
+
+func (_c *MockRepository_ArchiveNote_Call) RunAndReturn(run func(ctx context.Context, q dto.ArchiveNoteQuery) (dto.ArchiveNoteResult, error)) *MockRepository_ArchiveNote_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateNote provides a mock function for the type MockRepository
 func (_mock *MockRepository) CreateNote(ctx context.Context, note dto.CreateNoteCommand) (dto.CreateNoteResult, error) {
 	ret := _mock.Called(ctx, note)
@@ -357,6 +423,72 @@ func (_c *MockRepository_NoteCount_Call) Return(countNotesResult dto.CountNotesR
 }
 
 func (_c *MockRepository_NoteCount_Call) RunAndReturn(run func(ctx context.Context) (dto.CountNotesResult, error)) *MockRepository_NoteCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RestoreNote provides a mock function for the type MockRepository
+func (_mock *MockRepository) RestoreNote(ctx context.Context, q dto.RestoreNoteQuery) (dto.RestoreNoteResult, error) {
+	ret := _mock.Called(ctx, q)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RestoreNote")
+	}
+
+	var r0 dto.RestoreNoteResult
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.RestoreNoteQuery) (dto.RestoreNoteResult, error)); ok {
+		return returnFunc(ctx, q)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.RestoreNoteQuery) dto.RestoreNoteResult); ok {
+		r0 = returnFunc(ctx, q)
+	} else {
+		r0 = ret.Get(0).(dto.RestoreNoteResult)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, dto.RestoreNoteQuery) error); ok {
+		r1 = returnFunc(ctx, q)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockRepository_RestoreNote_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RestoreNote'
+type MockRepository_RestoreNote_Call struct {
+	*mock.Call
+}
+
+// RestoreNote is a helper method to define mock.On call
+//   - ctx context.Context
+//   - q dto.RestoreNoteQuery
+func (_e *MockRepository_Expecter) RestoreNote(ctx any, q any) *MockRepository_RestoreNote_Call {
+	return &MockRepository_RestoreNote_Call{Call: _e.mock.On("RestoreNote", ctx, q)}
+}
+
+func (_c *MockRepository_RestoreNote_Call) Run(run func(ctx context.Context, q dto.RestoreNoteQuery)) *MockRepository_RestoreNote_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 dto.RestoreNoteQuery
+		if args[1] != nil {
+			arg1 = args[1].(dto.RestoreNoteQuery)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockRepository_RestoreNote_Call) Return(restoreNoteResult dto.RestoreNoteResult, err error) *MockRepository_RestoreNote_Call {
+	_c.Call.Return(restoreNoteResult, err)
+	return _c
+}
+
+func (_c *MockRepository_RestoreNote_Call) RunAndReturn(run func(ctx context.Context, q dto.RestoreNoteQuery) (dto.RestoreNoteResult, error)) *MockRepository_RestoreNote_Call {
 	_c.Call.Return(run)
 	return _c
 }

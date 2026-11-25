@@ -55,11 +55,13 @@ func TestListNotes(t *testing.T) {
 		deps := newDeps(t)
 		ctx := newCtx()
 		repositoryErr := errors.New("database unavailable")
+		input := usecases.ListNotesInput{Limit: 10}
+		query := dto.ListNotesQuery{Limit: 10}
 
-		deps.repo.EXPECT().ListNotes(ctx, dto.ListNotesQuery{}).
+		deps.repo.EXPECT().ListNotes(ctx, query).
 			Return(dto.ListNotesResult{}, repositoryErr)
 
-		output, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{})
+		output, err := newUsecases(deps).ListNotes(ctx, input)
 		require.ErrorIs(t, err, repositoryErr)
 		require.Zero(t, output)
 	})
@@ -115,5 +117,23 @@ func TestListNotes(t *testing.T) {
 		require.Len(t, out.Items, 2)
 		require.Equal(t, int64(2), out.Items[0].ID)
 		require.Equal(t, int64(3), out.Items[1].ID)
+	})
+
+	t.Run("tc7: include archived is passed to repository", func(t *testing.T) {
+		deps := newDeps(t)
+		ctx := newCtx()
+
+		deps.repo.EXPECT().
+			ListNotes(ctx, dto.ListNotesQuery{
+				Limit:           20,
+				IncludeArchived: true,
+			}).
+			Return(dto.ListNotesResult{}, nil)
+
+		_, err := newUsecases(deps).ListNotes(ctx, usecases.ListNotesInput{
+			Limit:           20,
+			IncludeArchived: true,
+		})
+		require.NoError(t, err)
 	})
 }
